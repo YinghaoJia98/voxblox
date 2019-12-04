@@ -33,6 +33,9 @@ struct EsdfVoxel {
    */
   Eigen::Vector3i parent = Eigen::Vector3i::Zero();
 
+  Eigen::Vector3f gradient = Eigen::Vector3f::Zero();
+  Eigen::Matrix3f hessian = Eigen::Matrix3f::Zero();
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 

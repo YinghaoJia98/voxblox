@@ -23,6 +23,80 @@ bool Interpolator<VoxelType>::getDistance(const Point& pos,
 }
 
 template <typename VoxelType>
+bool Interpolator<VoxelType>::getInterpolatedDistance(const Point& pos,
+                        FloatingPoint* distance) const{
+
+  typename Layer<VoxelType>::BlockType::ConstPtr block_ptr =
+      layer_->getBlockPtrByCoordinates(pos);
+  if (block_ptr == nullptr) {
+    return false;
+  }
+  VoxelIndex voxel_index =
+      block_ptr->computeTruncatedVoxelIndexFromCoordinates(pos);
+  Point voxel_pos = block_ptr->computeCoordinatesFromVoxelIndex(voxel_index);
+
+  const VoxelType* voxel_ptr = block_ptr->getVoxelPtrByCoordinates(pos);
+
+  if (voxel_ptr){
+    float_t  voxelSizeInv = block_ptr->voxel_size_inv();
+    Point offset = (pos - voxel_pos);
+    *distance = voxel_ptr->distance + voxel_ptr->gradient.dot(offset) + 0.5 * offset.dot(voxel_ptr->hessian * offset);
+    return true;
+  }
+  return false;
+}
+
+template <typename VoxelType>
+bool Interpolator<VoxelType>::getInterpolatedDistanceGradientHessian(const Point& pos,
+                                                      FloatingPoint* distance, Point* gradient, Eigen::Matrix<FloatingPoint, 3, 3>* hessian) const{
+
+  typename Layer<VoxelType>::BlockType::ConstPtr block_ptr =
+      layer_->getBlockPtrByCoordinates(pos);
+  if (block_ptr == nullptr) {
+    return false;
+  }
+  VoxelIndex voxel_index =
+      block_ptr->computeTruncatedVoxelIndexFromCoordinates(pos);
+  Point voxel_pos = block_ptr->computeCoordinatesFromVoxelIndex(voxel_index);
+
+  const VoxelType* voxel_ptr = block_ptr->getVoxelPtrByCoordinates(pos);
+
+  if (voxel_ptr){
+    float_t  voxelSizeInv = block_ptr->voxel_size_inv();
+    Point offset = (pos - voxel_pos);
+    *distance = voxel_ptr->distance + voxel_ptr->gradient.dot(offset) + 0.5 * offset.dot(voxel_ptr->hessian * offset);
+    *gradient = voxel_ptr->gradient + voxel_ptr->hessian * offset;
+    *hessian = voxel_ptr->hessian;
+    return true;
+  }
+  return false;
+}
+
+template <typename VoxelType>
+bool Interpolator<VoxelType>::getInterpolatedGradient(const Point& pos,
+                                                      Point* grad) const{
+
+  typename Layer<VoxelType>::BlockType::ConstPtr block_ptr =
+      layer_->getBlockPtrByCoordinates(pos);
+  if (block_ptr == nullptr) {
+    return false;
+  }
+  VoxelIndex voxel_index =
+      block_ptr->computeTruncatedVoxelIndexFromCoordinates(pos);
+  Point voxel_pos = block_ptr->computeCoordinatesFromVoxelIndex(voxel_index);
+
+  const VoxelType* voxel_ptr = block_ptr->getVoxelPtrByCoordinates(pos);
+
+  if (voxel_ptr){
+    float_t  voxelSizeInv = block_ptr->voxel_size_inv();
+    Point offset = (pos - voxel_pos);
+    *grad = voxel_ptr->gradient + voxel_ptr->hessian * offset;
+    return true;
+  }
+  return false;
+}
+
+template <typename VoxelType>
 bool Interpolator<VoxelType>::getVoxel(const Point& pos, VoxelType* voxel,
                                        bool interpolate) const {
   if (interpolate) {
@@ -61,6 +135,38 @@ bool Interpolator<VoxelType>::getGradient(const Point& pos, Point* grad,
   // This is central difference, so it's 2x voxel size between measurements.
   *grad /= (2 * block_ptr->voxel_size());
   return true;
+}
+
+template <typename VoxelType>
+bool Interpolator<VoxelType>::getHessian(const Point& pos, Eigen::Matrix<FloatingPoint, 3, 3>* hess,
+                const bool interpolate) const{
+  CHECK_NOTNULL(hess);
+
+  typename Layer<VoxelType>::BlockType::ConstPtr block_ptr =
+      layer_->getBlockPtrByCoordinates(pos);
+  if (block_ptr == nullptr) {
+    return false;
+  }
+  // Now get the gradient.
+  *hess = Eigen::Matrix<FloatingPoint, 3, 3>::Zero();
+  // Iterate over all 3 D, and over negative and positive signs in central
+  // difference.
+  for (unsigned int i = 0u; i < 3u; ++i) {
+    for (int sign = -1; sign <= 1; sign += 2) {
+      Point offset = Point::Zero();
+      offset(i) = sign * block_ptr->voxel_size();
+      Point offset_gradient;
+      if (!getGradient(pos + offset, &offset_gradient, interpolate)) {
+        return false;
+      }
+      (*hess).col(i) += offset_gradient * static_cast<FloatingPoint>(sign);
+    }
+  }
+  // Scale by correct size.
+  // This is central difference, so it's 2x voxel size between measurements.
+  *hess /= (2 * block_ptr->voxel_size());
+  return true;
+
 }
 
 template <typename VoxelType>
