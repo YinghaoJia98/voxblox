@@ -6,6 +6,7 @@
 #include <bitset>
 #include <memory>
 #include <vector>
+#include <shared_mutex>
 
 #include "./Block.pb.h"
 #include "voxblox/core/common.h"
@@ -32,7 +33,8 @@ class Block {
         voxels_per_side_(voxels_per_side),
         voxel_size_(voxel_size),
         origin_(origin),
-        updated_(false) {
+        updated_(false),
+        mutex_(){
     num_voxels_ = voxels_per_side_ * voxels_per_side_ * voxels_per_side_;
     voxel_size_inv_ = 1.0 / voxel_size_;
     block_size_ = voxels_per_side_ * voxel_size_;
@@ -187,6 +189,8 @@ class Block {
 
   size_t getMemorySize() const;
 
+  inline std::shared_mutex & getMutex() const { return mutex_; }
+
  protected:
   std::unique_ptr<VoxelType[]> voxels_;
 
@@ -212,6 +216,8 @@ class Block {
 
   /// Is set to true when data is updated.
   std::bitset<Update::kCount> updated_;
+
+  mutable std::shared_mutex mutex_;
 };
 
 }  // namespace voxblox

@@ -55,6 +55,7 @@ bool Interpolator<VoxelType>::getInterpolatedDistanceGradientHessian(const Point
   if (block_ptr == nullptr) {
     return false;
   }
+  std::shared_lock sharedLock(block_ptr->getMutex());
   VoxelIndex voxel_index =
       block_ptr->computeTruncatedVoxelIndexFromCoordinates(pos);
   Point voxel_pos = block_ptr->computeCoordinatesFromVoxelIndex(voxel_index);

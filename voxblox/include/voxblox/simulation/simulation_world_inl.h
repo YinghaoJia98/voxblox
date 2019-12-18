@@ -7,6 +7,7 @@
 
 #include "voxblox/core/block.h"
 #include "voxblox/utils/timing.h"
+#include <shared_mutex>
 
 namespace voxblox {
 
@@ -50,6 +51,8 @@ void SimulationWorld::generateSdfFromWorld(FloatingPoint max_dist,
             coords.z() >= min_bound_.z() && coords.z() <= max_bound_.z())) {
         continue;
       }
+
+      std::unique_lock sharedLock(block->getMutex());
 
       // Iterate over all objects and get distances to this thing.
       FloatingPoint voxel_dist = max_dist;
