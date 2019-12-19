@@ -281,6 +281,9 @@ class Layer {
 
   size_t getMemorySize() const;
 
+  void cacheGradients();
+  void cacheHessians();
+
  protected:
   FloatingPoint voxel_size_;
   size_t voxels_per_side_;

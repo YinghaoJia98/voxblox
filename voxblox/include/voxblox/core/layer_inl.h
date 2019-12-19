@@ -294,6 +294,12 @@ std::string Layer<VoxelType>::getType() const {
   return getVoxelType<VoxelType>();
 }
 
+template <>
+void Layer<EsdfCachingVoxel>::cacheGradients();
+
+template <>
+void Layer<EsdfCachingVoxel>::cacheHessians();
+
 }  // namespace voxblox
 
 #endif  // VOXBLOX_CORE_LAYER_INL_H_
