@@ -45,10 +45,8 @@ class Layer {
   /// Create the layer from protobuf layer header.
   explicit Layer(const LayerProto& proto);
 
+  template<typename> friend class Layer;
   /// Deep copy constructor.
-  explicit Layer(const Layer& other);
-
-  friend Layer<EsdfCachingVoxel>;
   template <typename OtherVoxelType>
   explicit Layer(const Layer<OtherVoxelType> & other);
 
