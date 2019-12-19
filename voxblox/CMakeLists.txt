@@ -5,7 +5,7 @@ find_package(catkin_simple REQUIRED)
 catkin_simple()
 
 set(CMAKE_MACOSX_RPATH 0)
-add_definitions(-std=c++17 -Wall -Wextra)
+add_definitions(-std=c++11 -Wall -Wextra)
 
 ############
 # PROTOBUF #
@@ -41,6 +41,7 @@ set("${PROJECT_NAME}_SRCS"
   src/integrator/integrator_utils.cc
   src/integrator/intensity_integrator.cc
   src/integrator/tsdf_integrator.cc
+  src/interpolator/interpolator.cc
   src/io/mesh_ply.cc
   src/io/sdf_ply.cc
   src/mesh/marching_cubes.cc

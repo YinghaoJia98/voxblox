@@ -51,7 +51,9 @@ VoxelEvaluationResult computeVoxelError(
 
 /// Returns true if the voxel has been observed.
 template <typename VoxelType>
-bool isObservedVoxel(const VoxelType& voxel);
+bool isObservedVoxel(const VoxelType& voxel){
+  return voxel.observed;
+}
 
 /// Allow this class to be templated on all kinds of voxels.
 template <typename VoxelType>
@@ -226,8 +228,6 @@ VoxelEvaluationResult computeVoxelError(
 
 template <>
 bool isObservedVoxel(const TsdfVoxel& voxel);
-template <>
-bool isObservedVoxel(const EsdfVoxel& voxel);
 template <>
 FloatingPoint getVoxelSdf(const TsdfVoxel& voxel);
 template <>

@@ -48,6 +48,10 @@ class Layer {
   /// Deep copy constructor.
   explicit Layer(const Layer& other);
 
+  friend Layer<EsdfCachingVoxel>;
+  template <typename OtherVoxelType>
+  explicit Layer(const Layer<OtherVoxelType> & other);
+
   virtual ~Layer() {}
 
   enum class BlockMergingStrategy { kProhibit, kReplace, kDiscard, kMerge };

@@ -23,77 +23,21 @@ bool Interpolator<VoxelType>::getDistance(const Point& pos,
 }
 
 template <typename VoxelType>
-bool Interpolator<VoxelType>::getInterpolatedDistance(const Point& pos,
-                        FloatingPoint* distance) const{
-
-  typename Layer<VoxelType>::BlockType::ConstPtr block_ptr =
-      layer_->getBlockPtrByCoordinates(pos);
-  if (block_ptr == nullptr) {
-    return false;
-  }
-  VoxelIndex voxel_index =
-      block_ptr->computeTruncatedVoxelIndexFromCoordinates(pos);
-  Point voxel_pos = block_ptr->computeCoordinatesFromVoxelIndex(voxel_index);
-
-  const VoxelType* voxel_ptr = block_ptr->getVoxelPtrByCoordinates(pos);
-
-  if (voxel_ptr){
-    float_t  voxelSizeInv = block_ptr->voxel_size_inv();
-    Point offset = (pos - voxel_pos);
-    *distance = voxel_ptr->distance + voxel_ptr->gradient.dot(offset) + 0.5 * offset.dot(voxel_ptr->hessian * offset);
-    return true;
-  }
+bool Interpolator<VoxelType>::getInterpolatedDistance(
+    const Point& pos, FloatingPoint* distance) const {
   return false;
 }
 
 template <typename VoxelType>
-bool Interpolator<VoxelType>::getInterpolatedDistanceGradientHessian(const Point& pos,
-                                                      FloatingPoint* distance, Point* gradient, Eigen::Matrix<FloatingPoint, 3, 3>* hessian) const{
-
-  typename Layer<VoxelType>::BlockType::ConstPtr block_ptr =
-      layer_->getBlockPtrByCoordinates(pos);
-  if (block_ptr == nullptr) {
-    return false;
-  }
-  std::shared_lock sharedLock(block_ptr->getMutex());
-  VoxelIndex voxel_index =
-      block_ptr->computeTruncatedVoxelIndexFromCoordinates(pos);
-  Point voxel_pos = block_ptr->computeCoordinatesFromVoxelIndex(voxel_index);
-
-  const VoxelType* voxel_ptr = block_ptr->getVoxelPtrByCoordinates(pos);
-
-  if (voxel_ptr){
-    float_t  voxelSizeInv = block_ptr->voxel_size_inv();
-    Point offset = (pos - voxel_pos);
-    *distance = voxel_ptr->distance + voxel_ptr->gradient.dot(offset) + 0.5 * offset.dot(voxel_ptr->hessian * offset);
-    *gradient = voxel_ptr->gradient + voxel_ptr->hessian * offset;
-    *hessian = voxel_ptr->hessian;
-    return true;
-  }
+bool Interpolator<VoxelType>::getInterpolatedDistanceGradientHessian(
+    const Point& pos, FloatingPoint* distance, Point* gradient,
+    Eigen::Matrix<FloatingPoint, 3, 3>* hessian) const {
   return false;
 }
 
 template <typename VoxelType>
 bool Interpolator<VoxelType>::getInterpolatedGradient(const Point& pos,
-                                                      Point* grad) const{
-
-  typename Layer<VoxelType>::BlockType::ConstPtr block_ptr =
-      layer_->getBlockPtrByCoordinates(pos);
-  if (block_ptr == nullptr) {
-    return false;
-  }
-  VoxelIndex voxel_index =
-      block_ptr->computeTruncatedVoxelIndexFromCoordinates(pos);
-  Point voxel_pos = block_ptr->computeCoordinatesFromVoxelIndex(voxel_index);
-
-  const VoxelType* voxel_ptr = block_ptr->getVoxelPtrByCoordinates(pos);
-
-  if (voxel_ptr){
-    float_t  voxelSizeInv = block_ptr->voxel_size_inv();
-    Point offset = (pos - voxel_pos);
-    *grad = voxel_ptr->gradient + voxel_ptr->hessian * offset;
-    return true;
-  }
+                                                      Point* grad) const {
   return false;
 }
 
@@ -139,8 +83,9 @@ bool Interpolator<VoxelType>::getGradient(const Point& pos, Point* grad,
 }
 
 template <typename VoxelType>
-bool Interpolator<VoxelType>::getHessian(const Point& pos, Eigen::Matrix<FloatingPoint, 3, 3>* hess,
-                const bool interpolate) const{
+bool Interpolator<VoxelType>::getHessian(
+    const Point& pos, Eigen::Matrix<FloatingPoint, 3, 3>* hess,
+    const bool interpolate) const {
   CHECK_NOTNULL(hess);
 
   typename Layer<VoxelType>::BlockType::ConstPtr block_ptr =
@@ -167,7 +112,6 @@ bool Interpolator<VoxelType>::getHessian(const Point& pos, Eigen::Matrix<Floatin
   // This is central difference, so it's 2x voxel size between measurements.
   *hess /= (2 * block_ptr->voxel_size());
   return true;
-
 }
 
 template <typename VoxelType>
@@ -461,13 +405,8 @@ bool Interpolator<VoxelType>::getNearestDistanceAndWeight(
   return true;
 }
 
-template <>
-inline float Interpolator<TsdfVoxel>::getVoxelSdf(const TsdfVoxel& voxel) {
-  return voxel.distance;
-}
-
-template <>
-inline float Interpolator<EsdfVoxel>::getVoxelSdf(const EsdfVoxel& voxel) {
+template <typename VoxelType>
+inline float Interpolator<VoxelType>::getVoxelSdf(const VoxelType& voxel) {
   return voxel.distance;
 }
 

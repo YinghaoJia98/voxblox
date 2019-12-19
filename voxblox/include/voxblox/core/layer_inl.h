@@ -79,6 +79,34 @@ Layer<VoxelType>::Layer(const Layer& other) {
 }
 
 template <typename VoxelType>
+template <typename OtherVoxelType>
+Layer<VoxelType>::Layer(const Layer<OtherVoxelType>& other) {
+  voxel_size_ = other.voxel_size_;
+  voxel_size_inv_ = other.voxel_size_inv_;
+  voxels_per_side_ = other.voxels_per_side_;
+  voxels_per_side_inv_ = other.voxels_per_side_inv_;
+  block_size_ = other.block_size_;
+  block_size_inv_ = other.block_size_inv_;
+
+  for (const auto & key_value_pair :
+      other.block_map_) {
+    const BlockIndex& block_idx = key_value_pair.first;
+    const auto & block_ptr = key_value_pair.second;
+    CHECK(block_ptr);
+
+    typename BlockType::Ptr new_block = allocateBlockPtrByIndex(block_idx);
+    CHECK(new_block);
+
+    for (size_t linear_idx = 0u; linear_idx < block_ptr->num_voxels();
+         ++linear_idx) {
+      const auto& voxel = block_ptr->getVoxelByLinearIndex(linear_idx);
+      auto& new_voxel = new_block->getVoxelByLinearIndex(linear_idx);
+      new_voxel = voxel;
+    }
+  }
+}
+
+template <typename VoxelType>
 bool Layer<VoxelType>::saveToFile(const std::string& file_path,
                                   bool clear_file) const {
   constexpr bool kIncludeAllBlocks = true;

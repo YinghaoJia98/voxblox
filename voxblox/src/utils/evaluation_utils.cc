@@ -72,11 +72,6 @@ bool isObservedVoxel(const TsdfVoxel& voxel) {
 }
 
 template <>
-bool isObservedVoxel(const EsdfVoxel& voxel) {
-  return voxel.observed;
-}
-
-template <>
 FloatingPoint getVoxelSdf(const TsdfVoxel& voxel) {
   return voxel.distance;
 }
