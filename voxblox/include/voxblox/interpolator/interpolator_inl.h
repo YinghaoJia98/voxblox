@@ -22,24 +22,18 @@ bool Interpolator<VoxelType>::getDistance(const Point& pos,
   }
 }
 
-template <typename VoxelType>
-bool Interpolator<VoxelType>::getInterpolatedDistance(
-    const Point& pos, FloatingPoint* distance) const {
-  return false;
-}
+template <>
+bool Interpolator<EsdfCachingVoxel>::getInterpolatedDistance(
+    const Point& pos, FloatingPoint* distance) const;
 
-template <typename VoxelType>
-bool Interpolator<VoxelType>::getInterpolatedDistanceGradientHessian(
+template <>
+bool Interpolator<EsdfCachingVoxel>::getInterpolatedDistanceGradientHessian(
     const Point& pos, FloatingPoint* distance, Point* gradient,
-    Eigen::Matrix<FloatingPoint, 3, 3>* hessian) const {
-  return false;
-}
+    Eigen::Matrix<FloatingPoint, 3, 3>* hessian) const;
 
-template <typename VoxelType>
-bool Interpolator<VoxelType>::getInterpolatedGradient(const Point& pos,
-                                                      Point* grad) const {
-  return false;
-}
+template <>
+bool Interpolator<EsdfCachingVoxel>::getInterpolatedGradient(const Point& pos,
+                                                      Point* grad) const;
 
 template <typename VoxelType>
 bool Interpolator<VoxelType>::getVoxel(const Point& pos, VoxelType* voxel,
