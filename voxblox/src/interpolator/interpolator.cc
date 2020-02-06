@@ -23,10 +23,18 @@ bool Interpolator<EsdfCachingVoxel>::getInterpolatedDistanceGradientHessian(
   if (voxel_ptr) {
     float_t voxelSizeInv = block_ptr->voxel_size_inv();
     Point offset = (pos - voxel_pos);
-    *distance = voxel_ptr->distance + voxel_ptr->gradient.dot(offset) +
-                0.5 * offset.dot(voxel_ptr->hessian * offset);
-    *gradient = voxel_ptr->gradient + voxel_ptr->hessian * offset;
-    *hessian = voxel_ptr->hessian;
+//    *distance = voxel_ptr->distance + voxel_ptr->gradient.dot(offset) +
+//                0.5 * offset.dot(voxel_ptr->hessian * offset);
+    *distance = voxel_ptr->distance + voxel_ptr->gradient.dot(offset);
+    //*gradient = voxel_ptr->gradient + voxel_ptr->hessian * offset;
+    *gradient = voxel_ptr->gradient;
+    //*hessian = voxel_ptr->hessian;
+
+//    std::cout << "voxel_ptr->gradient: " << std::endl << voxel_ptr->gradient << std::endl;
+//    std::cout << "voxel_ptr->hessian: " << std::endl << voxel_ptr->hessian << std::endl;
+//    std::cout << "offset: " << std::endl << offset << std::endl;
+//    std::cout << "voxel_pos: " << std::endl << voxel_pos << std::endl;
+
     return true;
   }
   return false;
