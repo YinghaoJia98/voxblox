@@ -32,9 +32,10 @@ class Interpolator {
 
   bool getInterpolatedDistance(const Point& pos, FloatingPoint* distance) const;
   bool getInterpolatedGradient(const Point& pos, Point* grad) const;
-  bool getInterpolatedDistanceGradientHessian(
-      const Point& pos, FloatingPoint* distance, Point* gradient,
-      Eigen::Matrix<FloatingPoint, 3, 3>* hessian) const;
+  bool getInterpolatedDistanceGradient(
+      const Point& pos, FloatingPoint* distance, Point* gradient) const;
+  bool getInterpolatedDistanceGradientFromHessian(
+      const Point& pos, FloatingPoint* distance, Point* gradient) const;
 
   bool getVoxel(const Point& pos, VoxelType* voxel,
                 bool interpolate = false) const;

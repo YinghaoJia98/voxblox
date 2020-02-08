@@ -27,9 +27,12 @@ bool Interpolator<EsdfCachingVoxel>::getInterpolatedDistance(
     const Point& pos, FloatingPoint* distance) const;
 
 template <>
-bool Interpolator<EsdfCachingVoxel>::getInterpolatedDistanceGradientHessian(
-    const Point& pos, FloatingPoint* distance, Point* gradient,
-    Eigen::Matrix<FloatingPoint, 3, 3>* hessian) const;
+bool Interpolator<EsdfCachingVoxel>::getInterpolatedDistanceGradient(
+    const Point& pos, FloatingPoint* distance, Point* gradient) const;
+
+template <>
+bool Interpolator<EsdfCachingVoxel>::getInterpolatedDistanceGradientFromHessian(
+    const Point& pos, FloatingPoint* distance, Point* gradient) const;
 
 template <>
 bool Interpolator<EsdfCachingVoxel>::getInterpolatedGradient(const Point& pos,
