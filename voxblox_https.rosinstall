@@ -19,7 +19,3 @@
 - git:
     local-name: minkindr_ros
     uri: https://github.com/ethz-asl/minkindr_ros.git
-- git:
-    local-name: voxblox
-    uri: https://github.com/ethz-asl/voxblox.git
-
