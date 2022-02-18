@@ -100,20 +100,26 @@ bool Transformer::lookupTransformTf(const std::string& from_frame,
 
   // Previous behavior was just to use the latest transform if the time is in
   // the future. Now we will just wait.
-  if (!tf_listener_.canTransform(to_frame, from_frame_modified,
-                                 time_to_lookup)) {
-    return false;
-  }
+  // if (!tf_listener_.canTransform(to_frame, from_frame_modified,
+  //                                time_to_lookup)) {
+  //   return false;
+  // }
 
   try {
     tf_listener_.lookupTransform(to_frame, from_frame_modified, time_to_lookup,
                                  tf_transform);
   } catch (tf::TransformException& ex) {  // NOLINT
-    ROS_ERROR_STREAM(
-        "Error getting TF transform from sensor data: " << ex.what());
-    return false;
+    tf_listener_.waitForTransform(to_frame, from_frame_modified, time_to_lookup,
+                                  ros::Duration(0.3));
+    try {
+      tf_listener_.lookupTransform(to_frame, from_frame_modified,
+                                   time_to_lookup, tf_transform);
+    } catch (tf::TransformException& ex) {  // NOLINT
+      ROS_ERROR_STREAM(
+          "Error getting TF transform from sensor data: " << ex.what());
+      return false;
+    }
   }
-
   tf::transformTFToKindr(tf_transform, transform);
   return true;
 }
