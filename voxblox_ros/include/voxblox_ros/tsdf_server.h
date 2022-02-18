@@ -11,10 +11,6 @@
 #include <std_srvs/Empty.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <memory>
-#include <queue>
-#include <string>
-
 #include <voxblox/alignment/icp.h>
 #include <voxblox/core/tsdf_map.h>
 #include <voxblox/integrator/tsdf_integrator.h>
@@ -24,6 +20,10 @@
 #include <voxblox/utils/color_maps.h>
 #include <voxblox_msgs/FilePath.h>
 #include <voxblox_msgs/Mesh.h>
+
+#include <memory>
+#include <queue>
+#include <string>
 
 #include "voxblox_ros/mesh_vis.h"
 #include "voxblox_ros/ptcloud_vis.h"
@@ -64,6 +64,7 @@ class TsdfServer {
 
   void publishAllUpdatedTsdfVoxels();
   void publishTsdfSurfacePoints();
+  void publishTsdfLocalSurfacePoints();
   void publishTsdfOccupiedNodes();
 
   virtual void publishSlices();
@@ -137,6 +138,7 @@ class TsdfServer {
   ros::Publisher mesh_pub_;
   ros::Publisher tsdf_pointcloud_pub_;
   ros::Publisher surface_pointcloud_pub_;
+  ros::Publisher local_surface_pointcloud_pub_;
   ros::Publisher tsdf_slice_pub_;
   ros::Publisher occupancy_marker_pub_;
   ros::Publisher icp_transform_pub_;
@@ -223,6 +225,7 @@ class TsdfServer {
   bool accumulate_icp_corrections_;
 
   FloatingPoint occupancy_min_distance_voxel_size_factor_;
+  FloatingPoint surface_min_distance_voxel_size_factor_;
 
   /// Subscriber settings.
   int pointcloud_queue_size_;
@@ -259,6 +262,8 @@ class TsdfServer {
 
   /// Current transform corrections from ICP.
   Transformation icp_corrected_transform_;
+
+  Transformation last_T_G_C_;
 };
 
 }  // namespace voxblox

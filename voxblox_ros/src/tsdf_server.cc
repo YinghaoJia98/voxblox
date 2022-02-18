@@ -1,9 +1,10 @@
+#include "voxblox_ros/tsdf_server.h"
+
 #include <minkindr_conversions/kindr_msg.h>
 #include <minkindr_conversions/kindr_tf.h>
+
 #include "voxblox_ros/conversions.h"
 #include "voxblox_ros/ros_params.h"
-
-#include "voxblox_ros/tsdf_server.h"
 
 namespace voxblox {
 
@@ -36,6 +37,7 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
       enable_icp_(false),
       accumulate_icp_corrections_(true),
       occupancy_min_distance_voxel_size_factor_(1.0),
+      surface_min_distance_voxel_size_factor_(0.75),
       pointcloud_queue_size_(1),
       num_subscribers_tsdf_map_(0),
       transformer_(nh, nh_private) {
@@ -45,6 +47,11 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
   surface_pointcloud_pub_ =
       nh_private_.advertise<pcl::PointCloud<pcl::PointXYZRGB> >(
           "surface_pointcloud", 1, true);
+
+  local_surface_pointcloud_pub_ =
+      nh_private_.advertise<pcl::PointCloud<pcl::PointXYZRGB> >(
+          "local_surface_pointcloud", 1, true);
+
   tsdf_pointcloud_pub_ =
       nh_private_.advertise<pcl::PointCloud<pcl::PointXYZI> >("tsdf_pointcloud",
                                                               1, true);
@@ -181,6 +188,10 @@ void TsdfServer::getServerConfigFromRosParam(
                    occupancy_min_distance_voxel_size_factor_,
                    occupancy_min_distance_voxel_size_factor_);
 
+  nh_private.param("surface_min_distance_voxel_size_factor",
+                   surface_min_distance_voxel_size_factor_,
+                   surface_min_distance_voxel_size_factor_);
+
   nh_private.param("verbose", verbose_, verbose_);
 
   // Mesh settings.
@@ -218,7 +229,6 @@ void TsdfServer::processPointCloudMessageAndInsert(
     const sensor_msgs::PointCloud2::Ptr& pointcloud_msg,
     const Transformation& T_G_C, const bool is_freespace_pointcloud) {
   // Convert the PCL pointcloud into our awesome format.
-
   // Horrible hack fix to fix color parsing colors in PCL.
   bool color_pointcloud = false;
   bool has_intensity = false;
@@ -412,6 +422,7 @@ void TsdfServer::integratePointcloud(const Transformation& T_G_C,
                                      const Pointcloud& ptcloud_C,
                                      const Colors& colors,
                                      const bool is_freespace_pointcloud) {
+  last_T_G_C_ = T_G_C;
   CHECK_EQ(ptcloud_C.size(), colors.size());
   tsdf_integrator_->integratePointCloud(T_G_C, ptcloud_C, colors,
                                         is_freespace_pointcloud);
@@ -430,13 +441,26 @@ void TsdfServer::publishAllUpdatedTsdfVoxels() {
 void TsdfServer::publishTsdfSurfacePoints() {
   // Create a pointcloud with distance = intensity.
   pcl::PointCloud<pcl::PointXYZRGB> pointcloud;
-  const float surface_distance_thresh =
-      tsdf_map_->getTsdfLayer().voxel_size() * 0.75;
+  const float surface_distance_thresh = tsdf_map_->getTsdfLayer().voxel_size() *
+                                        surface_min_distance_voxel_size_factor_;
   createSurfacePointcloudFromTsdfLayer(tsdf_map_->getTsdfLayer(),
                                        surface_distance_thresh, &pointcloud);
 
   pointcloud.header.frame_id = world_frame_;
   surface_pointcloud_pub_.publish(pointcloud);
+}
+
+void TsdfServer::publishTsdfLocalSurfacePoints() {
+  // Create a pointcloud with distance = intensity.
+  pcl::PointCloud<pcl::PointXYZRGB> pointcloud;
+  const float surface_distance_thresh = tsdf_map_->getTsdfLayer().voxel_size() *
+                                        surface_min_distance_voxel_size_factor_;
+  createLocalSurfacePointcloudFromTsdfLayer(tsdf_map_->getTsdfLayer(),
+                                            surface_distance_thresh,
+                                            &pointcloud, last_T_G_C_);
+
+  pointcloud.header.frame_id = world_frame_;
+  local_surface_pointcloud_pub_.publish(pointcloud);
 }
 
 void TsdfServer::publishTsdfOccupiedNodes() {
@@ -491,6 +515,7 @@ void TsdfServer::publishPointclouds() {
   // pointclouds, updated points, and occupied points.
   publishAllUpdatedTsdfVoxels();
   publishTsdfSurfacePoints();
+  publishTsdfLocalSurfacePoints();
   publishTsdfOccupiedNodes();
   if (publish_slices_) {
     publishSlices();

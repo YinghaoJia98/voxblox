@@ -1,18 +1,17 @@
 #ifndef VOXBLOX_ROS_PTCLOUD_VIS_H_
 #define VOXBLOX_ROS_PTCLOUD_VIS_H_
 
-#include <algorithm>
-#include <string>
-
 #include <eigen_conversions/eigen_msg.h>
 #include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
-
 #include <voxblox/core/common.h>
 #include <voxblox/core/layer.h>
 #include <voxblox/core/voxel.h>
+
+#include <algorithm>
+#include <string>
 
 #include "voxblox_ros/conversions.h"
 
@@ -188,6 +187,26 @@ inline bool visualizeNearSurfaceTsdfVoxels(const TsdfVoxel& voxel,
   return false;
 }
 
+// /Short-hand functions for visualizing different types of voxels.
+inline bool visualizeNearLocalSurfaceTsdfVoxels(const TsdfVoxel& voxel,
+                                                const Point& coord,
+                                                double surface_distance,
+                                                Color* color,
+                                                Transformation* trafo) {
+  CHECK_NOTNULL(color);
+  constexpr float kMinWeight = 0;
+  if (voxel.weight > kMinWeight &&
+      std::abs(voxel.distance) < surface_distance) {
+    *color = voxel.color;
+
+    if (std::abs(trafo->getPosition()[0] - coord.x()) < 8.0 &&
+        std::abs(trafo->getPosition()[1] - coord.y()) < 8.0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 inline bool visualizeTsdfVoxels(const TsdfVoxel& voxel, const Point& /*coord*/,
                                 Color* color) {
   CHECK_NOTNULL(color);
@@ -322,6 +341,17 @@ inline void createSurfacePointcloudFromTsdfLayer(
       layer,
       std::bind(&visualizeNearSurfaceTsdfVoxels, ph::_1, ph::_2,
                 surface_distance, ph::_3),
+      pointcloud);
+}
+inline void createLocalSurfacePointcloudFromTsdfLayer(
+    const Layer<TsdfVoxel>& layer, double surface_distance,
+    pcl::PointCloud<pcl::PointXYZRGB>* pointcloud, Transformation& trafo) {
+  CHECK_NOTNULL(pointcloud);
+
+  createColorPointcloudFromLayer<TsdfVoxel>(
+      layer,
+      std::bind(&visualizeNearLocalSurfaceTsdfVoxels, ph::_1, ph::_2,
+                surface_distance, ph::_3, &trafo),
       pointcloud);
 }
 
