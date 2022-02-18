@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="ISO-8859-15"?>
+<launch>
+    <arg name="play_bag" default="true" />
+
+    <arg name="bagfile" default="/media/jonfrey/Elements/ANYmal_Fieldtest/chimera_mission_2022_01_31_lab_experiments/bags/low_obstacle/merged.bag" />
+    <arg name="dumped_rosparameters" default="/media/jonfrey/Elements/ANYmal_Fieldtest/chimera_mission_2022_01_31_lab_experiments/bags/high_no_obstacle/cupy.yaml" />
+
+    <arg name="pause_playback_on_launch" default="false" />
+    <arg name="loop" default="true" />
+    <arg name="run_visualization" default="false" />
+    <!-- Other settings -->
+    <arg name="publish_rate_multiplier" default="0.5" />
+    <arg name="seconds_into_the_bag" default="0" />
+    <arg name="inspection_payload" default="disabled" />
+
+    <include file="/home/jonfrey/darpa_ws/src/darpa_subt/anymal/anymal_c_subt/anymal_c_subt/launch/replay_common.launch" pass_all_args="true" />
+    <include file="/home/jonfrey/darpa_ws/src/elevation_mapping_cupy/elevation_mapping_cupy/launch/elevation_mapping_cupy.launch" pass_all_args="true" />
+    <node pkg="gpu_path_optimizer" name="traversability_cost_server" type="traversability_cost_server.py" output="screen"></node>
+
+
+    <arg name="node_start_delay" default="10.0" />
+    <rosparam command="load" file="$(find voxblox_ros)/config/config_voxblox.yaml" />
+
+
+    <node pkg="lvn_utils" name="pointcloud_merger_node" type="pointcloud_merger_node.py" output="screen"></node>
+
+
+    <node pkg="lvn_utils" name="traversability_node" type="traversability_node.py" output="screen"></node>
+
+    <node name="voxblox_local" pkg="voxblox_ros" type="tsdf_server" output="screen" args="-alsologtostderr" clear_params="true" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' ">
+        <remap from="pointcloud" to="/merged_pointclouds" />
+        <param name="mesh_filename" value="/home/jonfrey/Datasets/ANYmal_datasets/forest/mesh.ply" />
+        <param name="world_frame" value="map" />
+    </node>
+
+    <arg name="rviz_config_path" default="/home/jonfrey/darpa_ws/src/gbplanner/third_party_deps/voxblox/voxblox_ros/ui/anymal.rviz" />
+
+    <arg name="rviz_splash_screen" default="$(find anymal_c_subt)/config/ui/splash_replay.png" />
+
+    <group if="true">
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config_path) --s $(arg rviz_splash_screen)" output="screen" respawn="true" launch-prefix="" />
+    </group>
+
+</launch> 
