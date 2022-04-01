@@ -142,6 +142,26 @@ inline void convertPointcloud(
   }
 }
 
+/// Convert pcl pointcloud to voxblox pointcloud and traversability vector
+template <typename PCLPoint>
+inline void convertTraversabilityPointcloud(
+        const typename pcl::PointCloud<PCLPoint>& pointcloud_pcl,
+        Pointcloud* points_C,
+        Traversabilities* traversabilities) {
+  points_C->reserve(pointcloud_pcl.size());
+  traversabilities->reserve(pointcloud_pcl.size());
+
+  for (size_t i = 0; i < pointcloud_pcl.points.size(); ++i) {
+    if (!isPointFinite(pointcloud_pcl.points[i])) {
+      continue;
+    }
+    points_C->push_back(Point(pointcloud_pcl.points[i].x,
+                              pointcloud_pcl.points[i].y,
+                              pointcloud_pcl.points[i].z));
+    traversabilities->push_back(pointcloud_pcl.points[i].intensity);
+  }
+}
+
 // Declarations
 template <typename VoxelType>
 void serializeLayerAsMsg(

@@ -3,7 +3,7 @@
 namespace voxblox {
 
 TraversabilityTsdfServer::TraversabilityTsdfServer(const ros::NodeHandle& nh,
-                                 const ros::NodeHandle& nh_private)
+                                                   const ros::NodeHandle& nh_private)
     : TsdfServer(nh, nh_private) {
 
   traversability_layer_.reset(
@@ -14,20 +14,22 @@ TraversabilityTsdfServer::TraversabilityTsdfServer(const ros::NodeHandle& nh,
       new TraversabilityTsdfIntegrator(tsdf_map_->getTsdfLayer(),
                                           traversability_layer_.get()));
 
-  //TODO(Zoe): do remapping for the topic instead of hard coding the path
-  traversability_pub_ = nh_private_.advertise<voxblox_msgs::Layer> ("/traversability_node/traversability_layer",
+  traversability_pub_ = nh_private_.advertise<voxblox_msgs::Layer> ("traversability_layer",
                                                                     1,
                                                                     true);
 
   //TODO(Zoe): do remapping for the topic instead of hard coding the path
+  // name this traversability_pointcloud instead of traversability
   traversability_pointcloud_sub_ = nh_private_.subscribe("/traversability_node/traversability",
                                                          1,
                                                          &TraversabilityTsdfServer::traversabilityPointcloudCallback,
                                                          this);
 }
 
-void TraversabilityTsdfServer::integrateTraversabilityPointcloud() {
-  traversability_tsdf_integrator_->integrateTraversability(traversability_pointcloud_);
+void TraversabilityTsdfServer::integrateTraversabilityPointcloud(const Pointcloud& traversability_pointcloud,
+                                                                 const Traversabilities& traversabilities) {
+  traversability_tsdf_integrator_->integrateTraversability(traversability_pointcloud,
+                                                            traversabilities);
 }
 
 void TraversabilityTsdfServer::publishTraversabilityLayer() {
@@ -42,22 +44,22 @@ void TraversabilityTsdfServer::publishTraversabilityLayer() {
 
 void TraversabilityTsdfServer::traversabilityPointcloudCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg) {
 
-  // convert the msg to pcl and then to a voxblox pointcloud
-  Pointcloud points_C;
-  Colors colors;
+  // convert the msg to pcl and then to a voxblox pointcloud and traversability vector
+  Pointcloud traversability_pointcloud;
+  Traversabilities traversabilities;
 
   pcl::PointCloud<pcl::PointXYZI> pointcloud_pcl;
 
   pcl::fromROSMsg(*pointcloud_msg,
                   pointcloud_pcl);
 
-  convertPointcloud(pointcloud_pcl,
-                    color_map_,
-                    &traversability_pointcloud_,
-                    &colors);
+  convertTraversabilityPointcloud(pointcloud_pcl,
+                                  &traversability_pointcloud,
+                                  &traversabilities);
 
   // integrate the traversability pointcloud to a traversability layer
-  integrateTraversabilityPointcloud();
+  integrateTraversabilityPointcloud(traversability_pointcloud,
+                                    traversabilities);
 
   // publish the traversability layer
   publishTraversabilityLayer();

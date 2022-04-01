@@ -46,6 +46,11 @@ struct IntensityVoxel {
   float weight = 0.0f;
 };
 
+struct TraversabilityVoxel {
+  float traversability = 0.0f;
+  unsigned int n_values = 0;
+};
+
 /// Used for serialization only.
 namespace voxel_types {
 const std::string kNotSerializable = "not_serializable";
@@ -53,6 +58,7 @@ const std::string kTsdf = "tsdf";
 const std::string kEsdf = "esdf";
 const std::string kOccupancy = "occupancy";
 const std::string kIntensity = "intensity";
+const std::string kTraversability = "traversability";
 }  // namespace voxel_types
 
 template <typename Type>
@@ -78,6 +84,11 @@ inline std::string getVoxelType<OccupancyVoxel>() {
 template <>
 inline std::string getVoxelType<IntensityVoxel>() {
   return voxel_types::kIntensity;
+}
+
+template <>
+inline std::string getVoxelType<TraversabilityVoxel>() {
+  return voxel_types::kTraversability;
 }
 
 }  // namespace voxblox
