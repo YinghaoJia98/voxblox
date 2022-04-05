@@ -19,6 +19,10 @@ template <>
 void mergeVoxelAIntoVoxelB(const OccupancyVoxel& voxel_A,
                            OccupancyVoxel* voxel_B);
 
+template <>
+void mergeVoxelAIntoVoxelB(const TraversabilityVoxel& voxel_A,
+                           TraversabilityVoxel* voxel_B);
+
 }  // namespace voxblox
 
 #endif  // VOXBLOX_UTILS_VOXEL_UTILS_H_

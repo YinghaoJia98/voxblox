@@ -36,6 +36,7 @@ set("${PROJECT_NAME}_SRCS"
   src/core/block.cc
   src/core/esdf_map.cc
   src/core/tsdf_map.cc
+  src/core/traversability_map.cc
   src/integrator/esdf_integrator.cc
   src/integrator/esdf_occ_integrator.cc
   src/integrator/integrator_utils.cc

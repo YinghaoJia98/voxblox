@@ -18,9 +18,7 @@ TraversabilityTsdfServer::TraversabilityTsdfServer(const ros::NodeHandle& nh,
                                                                     1,
                                                                     true);
 
-  //TODO(Zoe): do remapping for the topic instead of hard coding the path
-  // name this traversability_pointcloud instead of traversability
-  traversability_pointcloud_sub_ = nh_private_.subscribe("/traversability_node/traversability",
+  traversability_pointcloud_sub_ = nh_private_.subscribe("/traversability_pointcloud",
                                                          1,
                                                          &TraversabilityTsdfServer::traversabilityPointcloudCallback,
                                                          this);

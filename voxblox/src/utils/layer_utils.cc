@@ -50,5 +50,17 @@ bool isSameVoxel(const OccupancyVoxel& voxel_A, const OccupancyVoxel& voxel_B) {
   return is_the_same;
 }
 
+template <>
+bool isSameVoxel(const TraversabilityVoxel& voxel_A, const TraversabilityVoxel& voxel_B) {
+  bool is_the_same = true;
+
+  constexpr double kTolerance = 1e-10;
+
+  is_the_same &= std::abs(voxel_A.traversability - voxel_B.traversability) < kTolerance;
+  is_the_same &= std::max(voxel_A.n_values,voxel_B.n_values) - std::min(voxel_A.n_values,voxel_B.n_values) < kTolerance;
+
+  return is_the_same;
+}
+
 }  // namespace utils
 }  // namespace voxblox

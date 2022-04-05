@@ -132,6 +132,13 @@ void LayerTest<IntensityVoxel>::CompareVoxel(
   EXPECT_NEAR(voxel_A.weight, voxel_B.weight, kTolerance);
 }
 
+template <>
+void LayerTest<TraversabilityVoxel>::CompareVoxel(
+        const TraversabilityVoxel& voxel_A, const TraversabilityVoxel& voxel_B) const {
+  EXPECT_NEAR(voxel_A.traversability, voxel_B.traversability, kTolerance);
+  EXPECT_NEAR(voxel_A.n_values, voxel_B.n_values, kTolerance);
+}
+
 template <typename VoxelType>
 void fillVoxelWithTestData(size_t x, size_t y, size_t z, VoxelType* voxel);
 
@@ -213,6 +220,14 @@ inline void fillVoxelWithTestData(size_t x, size_t y, size_t z,
                                   IntensityVoxel* voxel) {
   CHECK_NOTNULL(voxel);
   voxel->intensity = x * y * 0.66 + z;
+  voxel->weight = y * z * 0.33 + x;
+}
+
+template <>
+inline void fillVoxelWithTestData(size_t x, size_t y, size_t z,
+                                  TraversabilityVoxel* voxel) {
+  CHECK_NOTNULL(voxel);
+  voxel->traversability = x * y * 0.66 + z;
   voxel->weight = y * z * 0.33 + x;
 }
 
