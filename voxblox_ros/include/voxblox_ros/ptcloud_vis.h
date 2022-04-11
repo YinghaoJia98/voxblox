@@ -283,6 +283,17 @@ inline bool visualizeIntensityVoxels(const IntensityVoxel& voxel,
   return false;
 }
 
+inline bool visualizeTraversabilityVoxels(const TraversabilityVoxel& voxel,
+                                     const Point& /*coord*/,
+                                     double* traversability) {
+  CHECK_NOTNULL(traversability);
+  if (voxel.n_values > 0) {
+    *traversability = voxel.traversability;
+    return true;
+  }
+  return false;
+}
+
 inline bool visualizeDistanceIntensityEsdfVoxelsSlice(
     const EsdfVoxel& voxel, const Point& coord, unsigned int free_plane_index,
     FloatingPoint free_plane_val, FloatingPoint voxel_size, double* intensity) {
@@ -418,6 +429,14 @@ inline void createIntensityPointcloudFromIntensityLayer(
   CHECK_NOTNULL(pointcloud);
   createColorPointcloudFromLayer<IntensityVoxel>(
       layer, &visualizeIntensityVoxels, pointcloud);
+}
+
+inline void createTraversabilityPointcloudFromTraversabilityLayer(
+        const Layer<TraversabilityVoxel>& layer,
+        pcl::PointCloud<pcl::PointXYZI>* pointcloud) {
+  CHECK_NOTNULL(pointcloud);
+  createColorPointcloudFromLayer<TraversabilityVoxel>(
+          layer, &visualizeTraversabilityVoxels, pointcloud);
 }
 
 inline void createDistancePointcloudFromTsdfLayerSlice(

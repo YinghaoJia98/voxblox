@@ -19,8 +19,8 @@ void TraversabilityTsdfIntegrator::integrateTraversability(const Pointcloud &poi
 
     TraversabilityVoxel* traversability_voxel_ptr = traversability_layer_->getVoxelPtrByCoordinates(pointcloud[i]);
 
-    float trav = traversability_voxel_ptr->traversability;
-    unsigned int wgt = traversability_voxel_ptr->n_values;
+    const float trav = traversability_voxel_ptr->traversability;
+    const unsigned int wgt = traversability_voxel_ptr->n_values;
 
     traversability_voxel_ptr->traversability = (trav * wgt + traversabilities[i]) / (1.0 + wgt);
     traversability_voxel_ptr->n_values += 1;

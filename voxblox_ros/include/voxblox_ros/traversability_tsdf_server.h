@@ -14,16 +14,18 @@ namespace voxblox {
     TraversabilityTsdfServer(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private);
     virtual ~TraversabilityTsdfServer() {}
 
-    void integrateTraversabilityPointcloud(const Pointcloud& traversability_pointcloud, const Traversabilities& traversabilities);
+    void integrateTraversability(const Pointcloud& traversability_pointcloud, const Traversabilities& traversabilities);
 
     void publishTraversabilityLayer();
+    void publishPointclouds() override;
 
-    void traversabilityPointcloudCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud);
+    void traversabilityCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg);
 
   protected:
-    ros::Subscriber traversability_pointcloud_sub_;
+    ros::Subscriber traversability_sub_;
 
-    ros::Publisher traversability_pub_;
+    ros::Publisher traversability_layer_pub_;
+    ros::Publisher traversability_pointcloud_pub_;
 
     std::shared_ptr<Layer<TraversabilityVoxel>> traversability_layer_;
     std::unique_ptr<TraversabilityTsdfIntegrator> traversability_tsdf_integrator_;
