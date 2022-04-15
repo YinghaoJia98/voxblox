@@ -31,11 +31,11 @@ class TraversabilityMap {
         config.traversability_voxel_size * config.traversability_voxels_per_side;
   }
 
-  // Creates a new OccupancyMap based on a COPY of this layer.
+  // Creates a new TraversabilityMap based on a COPY of this layer.
   explicit TraversabilityMap(const Layer<TraversabilityVoxel>& layer)
       : TraversabilityMap(aligned_shared<Layer<TraversabilityVoxel>>(layer)) {}
 
-  // Creates a new OccupancyMap that contains this layer.
+  // Creates a new TraversabilityMap that contains this layer.
   explicit TraversabilityMap(Layer<TraversabilityVoxel>::Ptr layer)
       : traversability_layer_(layer) {
     CHECK(layer);
