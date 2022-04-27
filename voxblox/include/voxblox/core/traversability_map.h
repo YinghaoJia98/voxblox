@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "voxblox/core/layer.h"
+#include "voxblox/utils/layer_utils.h"
 
 namespace voxblox {
 /// Map holding a Traversability Layer.
@@ -52,6 +53,10 @@ class TraversabilityMap {
   }
 
   FloatingPoint block_size() const { return block_size_; }
+
+  bool getMinimumTraversabilityBetweenPoints(const Point &p1, const Point &p2, float *min_traversability) const;
+
+  bool getAverageTraversabilityBetweenPoints(const Point &p1, const Point &p2, float *avg_traversability) const;
 
  protected:
   FloatingPoint block_size_;
