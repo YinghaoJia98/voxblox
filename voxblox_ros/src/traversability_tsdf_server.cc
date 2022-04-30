@@ -39,7 +39,7 @@ void TraversabilityTsdfServer::publishTraversabilityLayer() {
   voxblox_msgs::Layer layer_msg;
 
   serializeLayerAsMsg<TraversabilityVoxel>(*traversability_layer_,
-                                           true,
+                                           false,
                                            &layer_msg);
 
   traversability_layer_pub_.publish(layer_msg);
