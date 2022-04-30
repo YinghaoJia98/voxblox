@@ -7,6 +7,7 @@
 
 #include "voxblox/core/layer.h"
 #include "voxblox/utils/layer_utils.h"
+#include "voxblox/integrator/integrator_utils.h"
 
 namespace voxblox {
 /// Map holding a Traversability Layer.

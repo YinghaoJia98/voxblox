@@ -16,23 +16,27 @@ std::string TraversabilityMap::Config::print() const {
 bool TraversabilityMap::getMinimumTraversabilityBetweenPoints(const Point &p1,
                                                               const Point &p2,
                                                               float *min_traversability) const {
-  Eigen::Matrix<float, 3, 1> direction = (p2 - p1);
-  float min_trav = 100.0;
 
-  // Divide the line in 1000 segments
-  float n_segments = 1000.0;
-  for (int i = 0; i < n_segments + 1; ++i) {
-    Point p_i = p1 + direction * i / n_segments;
+  float voxel_size_inv = 1.0 / traversability_layer_->voxel_size();
 
-    auto voxel_ptr_i = traversability_layer_->getVoxelPtrByCoordinates(p_i);
-    if(!voxel_ptr_i) {
-      continue;
-    }
+  const Point start_scaled = p1 * voxel_size_inv;
+  const Point end_scaled = p2 * voxel_size_inv;
 
-    min_trav = std::min(min_trav, voxel_ptr_i->traversability);
+  AlignedVector<GlobalIndex> global_voxel_index;
+  castRay(start_scaled, end_scaled, &global_voxel_index);
+
+  float min_trav = 1.0;
+  unsigned int count = 0;
+
+  for (const GlobalIndex& global_voxel_idx : global_voxel_index) {
+    auto voxel_ptr = traversability_layer_->getVoxelPtrByGlobalIndex(global_voxel_idx);
+    if(!voxel_ptr) continue;
+
+    min_trav = std::min(min_trav, voxel_ptr->traversability);
+    ++count;
   }
 
-  if(min_trav == 100.0) return false;
+  if(count == 0) return false;
 
   *min_traversability = min_trav;
   return true;
@@ -41,35 +45,28 @@ bool TraversabilityMap::getMinimumTraversabilityBetweenPoints(const Point &p1,
 bool TraversabilityMap::getAverageTraversabilityBetweenPoints(const Point &p1,
                                                               const Point &p2,
                                                               float *avg_traversability) const {
-  Eigen::Matrix<float, 3, 1> direction = (p2 - p1);
-  float avg_trav = 0;
-  int voxel_count = 0;
+  float voxel_size_inv = 1.0 / traversability_layer_->voxel_size();
+  
+  const Point start_scaled = p1 * voxel_size_inv;
+  const Point end_scaled = p2 * voxel_size_inv;
 
-  Point p_prev = p1;
+  AlignedVector<GlobalIndex> global_voxel_index;
+  castRay(start_scaled, end_scaled, &global_voxel_index);
 
-  // Divide the line in 1000 segments
-  float n_segments = 1000.0;
-  for (int i = 1; i < n_segments + 1; ++i) {
-    Point p_i = p1 + direction * i / n_segments;
+  float avg_trav = 0.0;
+  unsigned int count = 0;
 
-    auto voxel_ptr_i = traversability_layer_->getVoxelPtrByCoordinates(p_i);
-    auto voxel_ptr_prev = traversability_layer_->getVoxelPtrByCoordinates(p_prev);
+  for (const GlobalIndex& global_voxel_idx : global_voxel_index) {
+    auto voxel_ptr = traversability_layer_->getVoxelPtrByGlobalIndex(global_voxel_idx);
+    if(!voxel_ptr) continue;
 
-    p_prev = p_i;
-
-    if (utils::isSameVoxel(voxel_ptr_i, voxel_ptr_prev)) continue;
-
-    if(!voxel_ptr_i) {
-      continue;
-    }
-
-    avg_trav += voxel_ptr_i->traversability;
-    ++voxel_count;
+    avg_trav += voxel_ptr->traversability;
+    ++count;
   }
 
-  if(avg_trav == 0.0) return false;
+  if(count == 0) return false;
 
-  *avg_traversability = avg_trav / float(voxel_count);
+  *avg_traversability = avg_trav / float(count);
   return true;
 }
 
