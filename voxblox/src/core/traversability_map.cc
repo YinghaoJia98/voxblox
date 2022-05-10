@@ -30,7 +30,7 @@ bool TraversabilityMap::getMinimumTraversabilityBetweenPoints(const Point &p1,
 
   for (const GlobalIndex& global_voxel_idx : global_voxel_index) {
     auto voxel_ptr = traversability_layer_->getVoxelPtrByGlobalIndex(global_voxel_idx);
-    if(!voxel_ptr) continue;
+    if(!voxel_ptr || voxel_ptr->n_values == 0) continue;
 
     min_trav = std::min(min_trav, voxel_ptr->traversability);
     ++count;
@@ -58,7 +58,7 @@ bool TraversabilityMap::getAverageTraversabilityBetweenPoints(const Point &p1,
 
   for (const GlobalIndex& global_voxel_idx : global_voxel_index) {
     auto voxel_ptr = traversability_layer_->getVoxelPtrByGlobalIndex(global_voxel_idx);
-    if(!voxel_ptr) continue;
+    if(!voxel_ptr || voxel_ptr->n_values == 0) continue;
 
     avg_trav += voxel_ptr->traversability;
     ++count;
