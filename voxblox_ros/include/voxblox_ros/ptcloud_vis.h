@@ -365,6 +365,37 @@ inline void createLocalSurfacePointcloudFromTsdfLayer(
                 surface_distance, ph::_3, &trafo),
       pointcloud);
 }
+inline void createUncoloredSurfacePointcloudFromTsdfLayer(
+        const Layer<TsdfVoxel>& layer, double surface_distance,
+        pcl::PointCloud<pcl::PointXYZ>* pointcloud) {
+  CHECK_NOTNULL(pointcloud);
+  pointcloud->clear();
+  BlockIndexList blocks;
+  layer.getAllAllocatedBlocks(&blocks);
+
+  // Cache layer settings.
+  size_t vps = layer.voxels_per_side();
+  size_t num_voxels_per_block = vps * vps * vps;
+
+  // Iterate over all blocks.
+  for (const BlockIndex& index : blocks) {
+    // Iterate over all voxels in said blocks.
+    const Block<TsdfVoxel>& block = layer.getBlockByIndex(index);
+
+    for (size_t linear_index = 0; linear_index < num_voxels_per_block;
+         ++linear_index) {
+      Point coord = block.computeCoordinatesFromLinearIndex(linear_index);
+      if (block.getVoxelByLinearIndex(linear_index).weight > 0 &&
+          std::abs(block.getVoxelByLinearIndex(linear_index).distance) < surface_distance) {
+        pcl::PointXYZ point;
+        point.x = coord.x();
+        point.y = coord.y();
+        point.z = coord.z();
+        pointcloud->push_back(point);
+      }
+    }
+  }
+}
 
 /**
  * Create a pointcloud based on all the TSDF voxels.
