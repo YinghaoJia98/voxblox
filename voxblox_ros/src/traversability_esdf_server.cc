@@ -1,10 +1,10 @@
-#include "voxblox_ros/traversability_tsdf_server.h"
+#include "voxblox_ros/traversability_esdf_server.h"
 
 namespace voxblox {
 
-TraversabilityTsdfServer::TraversabilityTsdfServer(const ros::NodeHandle& nh,
+TraversabilityEsdfServer::TraversabilityEsdfServer(const ros::NodeHandle& nh,
                                                    const ros::NodeHandle& nh_private)
-    : TsdfServer(nh, nh_private) {
+    : EsdfServer(nh, nh_private) {
 
   traversability_layer_.reset(
       new Layer<TraversabilityVoxel>(tsdf_map_->getTsdfLayer().voxel_size(),
@@ -25,17 +25,17 @@ TraversabilityTsdfServer::TraversabilityTsdfServer(const ros::NodeHandle& nh,
 
   traversability_sub_ = nh_private_.subscribe("traversability",
                                               1,
-                                              &TraversabilityTsdfServer::traversabilityCallback,
+                                              &TraversabilityEsdfServer::traversabilityCallback,
                                               this);
 }
 
-void TraversabilityTsdfServer::integrateTraversability(const Pointcloud& traversability_pointcloud,
+void TraversabilityEsdfServer::integrateTraversability(const Pointcloud& traversability_pointcloud,
                                                        const Traversabilities& traversabilities) {
   traversability_tsdf_integrator_->integrateTraversability(traversability_pointcloud,
-                                                            traversabilities);
+                                                           traversabilities);
 }
 
-void TraversabilityTsdfServer::publishTraversabilityLayer() {
+void TraversabilityEsdfServer::publishTraversabilityLayer() {
   voxblox_msgs::Layer layer_msg;
 
   serializeLayerAsMsg<TraversabilityVoxel>(*traversability_layer_,
@@ -45,7 +45,7 @@ void TraversabilityTsdfServer::publishTraversabilityLayer() {
   traversability_layer_pub_.publish(layer_msg);
 }
 
-void TraversabilityTsdfServer::publishPointclouds() {
+void TraversabilityEsdfServer::publishPointclouds() {
   pcl::PointCloud<pcl::PointXYZI> pointcloud;
 
   createTraversabilityPointcloudFromTraversabilityLayer(*traversability_layer_, &pointcloud);
@@ -54,10 +54,10 @@ void TraversabilityTsdfServer::publishPointclouds() {
 
   traversability_pointcloud_pub_.publish(pointcloud);
 
-  TsdfServer::publishPointclouds();
+  EsdfServer::publishPointclouds();
 }
 
-void TraversabilityTsdfServer::traversabilityCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg) {
+void TraversabilityEsdfServer::traversabilityCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg) {
 
   // convert the msg to pcl and then to a voxblox pointcloud and traversability vector
   Pointcloud traversability_pointcloud;

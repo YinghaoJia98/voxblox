@@ -1,18 +1,18 @@
-#ifndef VOXBLOX_TRAVERSABILITY_TSDF_SERVER_H_
-#define VOXBLOX_TRAVERSABILITY_TSDF_SERVER_H_
+#ifndef VOXBLOX_TRAVERSABILITY_ESDF_SERVER_H_
+#define VOXBLOX_TRAVERSABILITY_ESDF_SERVER_H_
 
 #include <voxblox/integrator/traversability_tsdf_integrator.h>
 
-#include "voxblox_ros/tsdf_server.h"
+#include "voxblox_ros/esdf_server.h"
 
 namespace voxblox {
 
-  class TraversabilityTsdfServer : public TsdfServer {
+  class TraversabilityEsdfServer : public EsdfServer {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    TraversabilityTsdfServer(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private);
-    virtual ~TraversabilityTsdfServer() {}
+    TraversabilityEsdfServer(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private);
+    virtual ~TraversabilityEsdfServer() {}
 
     void integrateTraversability(const Pointcloud& traversability_pointcloud, const Traversabilities& traversabilities);
 
@@ -33,4 +33,4 @@ namespace voxblox {
 
 }  // namespace voxblox
 
-#endif  // VOXBLOX_TRAVERSABILITY_TSDF_SERVER_H_
+#endif  // VOXBLOX_TRAVERSABILITY_ESDF_SERVER_H_
