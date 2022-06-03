@@ -36,7 +36,7 @@ bool TraversabilityMap::getMinimumTraversabilityBetweenPoints(const Point &p1,
     ++count;
   }
 
-  if(count == 0) return false;
+  if(count < 0.5 * global_voxel_index.size()) return false;
 
   *min_traversability = min_trav;
   return true;
@@ -64,7 +64,8 @@ bool TraversabilityMap::getAverageTraversabilityBetweenPoints(const Point &p1,
     ++count;
   }
 
-  if(count == 0) return false;
+  // if less than half the voxels actually have a value, getting the value fails
+  if(count < 0.5 * global_voxel_index.size()) return false;
 
   *avg_traversability = avg_trav / float(count);
   return true;
