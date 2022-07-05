@@ -51,4 +51,17 @@ void mergeVoxelAIntoVoxelB(const TraversabilityVoxel& voxel_A,
   }
 }
 
+template <>
+void mergeVoxelAIntoVoxelB(const HeightVoxel& voxel_A,
+                           HeightVoxel* voxel_B) {
+  float combined_n_values = voxel_A.n_values + voxel_B->n_values;
+  if (combined_n_values > 0) {
+    voxel_B->height = (voxel_A.height * voxel_A.n_values +
+                         voxel_B->height * voxel_B->n_values) /
+                        combined_n_values;
+
+    voxel_B->n_values = combined_n_values;
+  }
+}
+
 }  // namespace voxblox

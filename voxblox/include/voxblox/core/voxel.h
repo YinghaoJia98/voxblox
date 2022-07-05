@@ -51,6 +51,11 @@ struct TraversabilityVoxel {
   unsigned int n_values = 0;
 };
 
+struct HeightVoxel {
+  float height = 0.0f;
+  unsigned int n_values = 0;
+};
+
 /// Used for serialization only.
 namespace voxel_types {
 const std::string kNotSerializable = "not_serializable";
@@ -59,6 +64,7 @@ const std::string kEsdf = "esdf";
 const std::string kOccupancy = "occupancy";
 const std::string kIntensity = "intensity";
 const std::string kTraversability = "traversability";
+const std::string kHeight = "height";
 }  // namespace voxel_types
 
 template <typename Type>
@@ -89,6 +95,11 @@ inline std::string getVoxelType<IntensityVoxel>() {
 template <>
 inline std::string getVoxelType<TraversabilityVoxel>() {
   return voxel_types::kTraversability;
+}
+
+template <>
+inline std::string getVoxelType<HeightVoxel>() {
+  return voxel_types::kHeight;
 }
 
 }  // namespace voxblox

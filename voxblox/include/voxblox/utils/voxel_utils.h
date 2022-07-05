@@ -23,6 +23,10 @@ template <>
 void mergeVoxelAIntoVoxelB(const TraversabilityVoxel& voxel_A,
                            TraversabilityVoxel* voxel_B);
 
+template <>
+void mergeVoxelAIntoVoxelB(const HeightVoxel& voxel_A,
+                           HeightVoxel* voxel_B);
+
 }  // namespace voxblox
 
 #endif  // VOXBLOX_UTILS_VOXEL_UTILS_H_

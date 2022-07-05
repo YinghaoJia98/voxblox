@@ -58,6 +58,11 @@ class TsdfServer {
   void integratePointcloud(const Transformation& T_G_C,
                            const Pointcloud& ptcloud_C, const Colors& colors,
                            const bool is_freespace_pointcloud = false);
+  
+  void publishLocalHeightPointCloud(const Transformation& T_G_C,
+                                    const Pointcloud& ptcloud_C,
+                                    const bool is_freespace_pointcloud = false);
+
   virtual void newPoseCallback(const Transformation& /*new_pose*/) {
     // Do nothing.
   }
@@ -66,6 +71,9 @@ class TsdfServer {
   void publishTsdfSurfacePoints();
   void publishTsdfLocalSurfacePoints();
   void publishTsdfOccupiedNodes();
+
+  void publishRawHeightVoxels();
+  void publishRawHeightLayer();
 
   virtual void publishSlices();
   /// Incremental update.
@@ -143,8 +151,12 @@ class TsdfServer {
   ros::Publisher occupancy_marker_pub_;
   ros::Publisher icp_transform_pub_;
 
+  ros::Publisher local_height_pointcloud_pub_;
   /// Publish the complete map for other nodes to consume.
   ros::Publisher tsdf_map_pub_;
+
+  ros::Publisher raw_height_pointcloud_pub_;
+  ros::Publisher raw_height_layer_pub_;
 
   /// Subscriber to subscribe to another node generating the map.
   ros::Subscriber tsdf_map_sub_;
@@ -234,6 +246,8 @@ class TsdfServer {
   // Maps and integrators.
   std::shared_ptr<TsdfMap> tsdf_map_;
   std::unique_ptr<TsdfIntegratorBase> tsdf_integrator_;
+
+  std::shared_ptr<Layer<HeightVoxel>> raw_height_layer_;
 
   /// ICP matcher
   std::shared_ptr<ICP> icp_;

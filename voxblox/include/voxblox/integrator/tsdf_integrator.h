@@ -136,7 +136,7 @@ class TsdfIntegratorBase {
     std::string print() const;
   };
 
-  TsdfIntegratorBase(const Config& config, Layer<TsdfVoxel>* layer);
+  TsdfIntegratorBase(const Config& config, Layer<TsdfVoxel>* layer, Layer<HeightVoxel>* raw_height_layer);
 
   /**
    * Integrates the given point infomation into the TSDF.
@@ -150,10 +150,14 @@ class TsdfIntegratorBase {
                                    const Colors& colors,
                                    const bool freespace_points = false) = 0;
 
+  void integrateHeight(const Point& point);
+
+  void integrateHeight(const Transformation& T_G_C, const Pointcloud& points_C, const bool freespace_point);
+
   /// Returns a CONST ref of the config.
   const Config& getConfig() const { return config_; }
 
-  void setLayer(Layer<TsdfVoxel>* layer);
+  void setLayer(Layer<TsdfVoxel>* layer, Layer<HeightVoxel>* raw_height_layer);
 
  protected:
   virtual bool shouldAbortIntegration(const GlobalIndex& global_voxel_idx,
@@ -216,6 +220,7 @@ class TsdfIntegratorBase {
   Config config_;
 
   Layer<TsdfVoxel>* layer_;
+  Layer<HeightVoxel>* raw_height_layer_;
 
   // Cached map config.
   FloatingPoint voxel_size_;
@@ -253,10 +258,10 @@ class TsdfIntegratorFactory {
  public:
   static TsdfIntegratorBase::Ptr create(
       const std::string& integrator_type_name,
-      const TsdfIntegratorBase::Config& config, Layer<TsdfVoxel>* layer);
+      const TsdfIntegratorBase::Config& config, Layer<TsdfVoxel>* layer, Layer<HeightVoxel>* raw_height_layer);
   static TsdfIntegratorBase::Ptr create(
       const TsdfIntegratorType integrator_type,
-      const TsdfIntegratorBase::Config& config, Layer<TsdfVoxel>* layer);
+      const TsdfIntegratorBase::Config& config, Layer<TsdfVoxel>* layer, Layer<HeightVoxel>* raw_height_layer);
 };
 
 /**
@@ -267,8 +272,8 @@ class SimpleTsdfIntegrator : public TsdfIntegratorBase {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  SimpleTsdfIntegrator(const Config& config, Layer<TsdfVoxel>* layer)
-      : TsdfIntegratorBase(config, layer) {}
+  SimpleTsdfIntegrator(const Config& config, Layer<TsdfVoxel>* layer, Layer<HeightVoxel>* raw_height_layer)
+      : TsdfIntegratorBase(config, layer, raw_height_layer) {}
 
   void integratePointCloud(const Transformation& T_G_C,
                            const Pointcloud& points_C, const Colors& colors,
@@ -295,9 +300,8 @@ class MergedTsdfIntegrator : public TsdfIntegratorBase {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  MergedTsdfIntegrator(const Config& config, Layer<TsdfVoxel>* layer)
-      : TsdfIntegratorBase(config, layer) {}
-
+  MergedTsdfIntegrator(const Config& config, Layer<TsdfVoxel>* layer, Layer<HeightVoxel>* raw_height_layer)
+      : TsdfIntegratorBase(config, layer, raw_height_layer) {}
   void integratePointCloud(const Transformation& T_G_C,
                            const Pointcloud& points_C, const Colors& colors,
                            const bool freespace_points = false);
@@ -349,8 +353,8 @@ class FastTsdfIntegrator : public TsdfIntegratorBase {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  FastTsdfIntegrator(const Config& config, Layer<TsdfVoxel>* layer)
-      : TsdfIntegratorBase(config, layer) {}
+  FastTsdfIntegrator(const Config& config, Layer<TsdfVoxel>* layer, Layer<HeightVoxel>* raw_height_layer)
+      : TsdfIntegratorBase(config, layer, raw_height_layer) {}
 
   void integrateFunction(const Transformation& T_G_C,
                          const Pointcloud& points_C, const Colors& colors,

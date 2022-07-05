@@ -173,6 +173,26 @@ void Block<TraversabilityVoxel>::deserializeFromIntegers(
   }
 }
 
+template <>
+void Block<HeightVoxel>::deserializeFromIntegers(
+        const std::vector<uint32_t>& data) {
+  constexpr size_t kNumDataPacketsPerVoxel = 2u;
+  const size_t num_data_packets = data.size();
+  CHECK_EQ(num_voxels_ * kNumDataPacketsPerVoxel, num_data_packets);
+  for (size_t voxel_idx = 0u, data_idx = 0u;
+       voxel_idx < num_voxels_ && data_idx < num_data_packets;
+       ++voxel_idx, data_idx += kNumDataPacketsPerVoxel) {
+    const uint32_t bytes_1 = data[data_idx];
+    const uint32_t bytes_2 = data[data_idx + 1u];
+
+    HeightVoxel& voxel = voxels_[voxel_idx];
+
+    memcpy(&(voxel.height), &bytes_1, sizeof(bytes_1));
+    memcpy(&(voxel.n_values), &bytes_2, sizeof(bytes_2));
+  }
+}
+
+
 // Serialization functions:
 template <>
 void Block<TsdfVoxel>::serializeToIntegers(std::vector<uint32_t>* data) const {
@@ -284,6 +304,27 @@ void Block<TraversabilityVoxel>::serializeToIntegers(
 
     const uint32_t* bytes_1_ptr =
             reinterpret_cast<const uint32_t*>(&voxel.traversability);
+    data->push_back(*bytes_1_ptr);
+
+    const uint32_t* bytes_2_ptr =
+            reinterpret_cast<const uint32_t*>(&voxel.n_values);
+    data->push_back(*bytes_2_ptr);
+  }
+  CHECK_EQ(num_voxels_ * kNumDataPacketsPerVoxel, data->size());
+}
+
+template <>
+void Block<HeightVoxel>::serializeToIntegers(
+        std::vector<uint32_t>* data) const {
+  CHECK_NOTNULL(data);
+  constexpr size_t kNumDataPacketsPerVoxel = 2u;
+  data->clear();
+  data->reserve(num_voxels_ * kNumDataPacketsPerVoxel);
+  for (size_t voxel_idx = 0u; voxel_idx < num_voxels_; ++voxel_idx) {
+    const HeightVoxel& voxel = voxels_[voxel_idx];
+
+    const uint32_t* bytes_1_ptr =
+            reinterpret_cast<const uint32_t*>(&voxel.height);
     data->push_back(*bytes_1_ptr);
 
     const uint32_t* bytes_2_ptr =

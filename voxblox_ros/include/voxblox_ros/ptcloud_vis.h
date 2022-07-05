@@ -15,6 +15,8 @@
 
 #include "voxblox_ros/conversions.h"
 
+#include <chrono> // time how long iterate through all the voxels
+
 /**
  * This file contains a set of functions to visualize layers as pointclouds
  * (or marker arrays) based on a passed-in function. It also offers some
@@ -150,12 +152,14 @@ void createOccupancyBlocksFromLayer(
 
   BlockIndexList blocks;
   layer.getAllAllocatedBlocks(&blocks);
+  int ii = 0;
   for (const BlockIndex& index : blocks) {
     // Iterate over all voxels in said blocks.
     const Block<VoxelType>& block = layer.getBlockByIndex(index);
 
     for (size_t linear_index = 0; linear_index < num_voxels_per_block;
          ++linear_index) {
+      ii++;
       Point coord = block.computeCoordinatesFromLinearIndex(linear_index);
       if (vis_function(block.getVoxelByLinearIndex(linear_index), coord)) {
         geometry_msgs::Point cube_center;
@@ -169,6 +173,7 @@ void createOccupancyBlocksFromLayer(
       }
     }
   }
+  std::cout << " iterated through " << ii << " voxels" << std::endl;
   marker_array->markers.push_back(block_marker);
 }
 
@@ -289,6 +294,17 @@ inline bool visualizeTraversabilityVoxels(const TraversabilityVoxel& voxel,
   CHECK_NOTNULL(traversability);
   if (voxel.n_values > 0) {
     *traversability = voxel.traversability;
+    return true;
+  }
+  return false;
+}
+
+inline bool visualizeHeightVoxels(const HeightVoxel& voxel,
+                                     const Point& /*coord*/,
+                                     double* height) {
+  CHECK_NOTNULL(height);
+  if (voxel.n_values > 0) {
+    *height = voxel.height;
     return true;
   }
   return false;
@@ -470,6 +486,79 @@ inline void createTraversabilityPointcloudFromTraversabilityLayer(
           layer, &visualizeTraversabilityVoxels, pointcloud);
 }
 
+// only used for visualization, so speed does not matter too much
+inline void createHeightPointcloudFromHeightLayer(
+        const Layer<HeightVoxel>& layer,
+        pcl::PointCloud<pcl::PointXYZI>* pointcloud) {
+  CHECK_NOTNULL(pointcloud);
+
+  pointcloud->clear();
+  BlockIndexList blocks;
+  layer.getAllAllocatedBlocks(&blocks);
+
+  // Cache layer settings.
+  size_t vps = layer.voxels_per_side();
+  size_t num_voxels_per_block = vps * vps * vps;
+
+  // Temp variables.
+  double height = 0.0;
+  // Iterate over all blocks.
+  for (const BlockIndex& index : blocks) {
+    // Iterate over all voxels in said blocks.
+    const Block<HeightVoxel>& block = layer.getBlockByIndex(index);
+
+    for (size_t linear_index = 0; linear_index < num_voxels_per_block;
+         ++linear_index) {
+      Point coord = block.computeCoordinatesFromLinearIndex(linear_index);
+      if (visualizeHeightVoxels(block.getVoxelByLinearIndex(linear_index), coord,
+                       &height)) {
+        pcl::PointXYZI point;
+        point.x = coord.x();
+        point.y = coord.y();
+        point.z = height;
+        point.intensity = height;
+        pointcloud->push_back(point);
+      }
+    }
+  }
+}
+
+inline void createHeightPointcloudPlaneFromHeightLayer(
+        const Layer<HeightVoxel>& layer,
+        pcl::PointCloud<pcl::PointXYZI>* pointcloud) {
+  CHECK_NOTNULL(pointcloud);
+
+  pointcloud->clear();
+  BlockIndexList blocks;
+  layer.getAllAllocatedBlocks(&blocks);
+
+  // Cache layer settings.
+  size_t vps = layer.voxels_per_side();
+  size_t num_voxels_per_block = vps * vps * vps;
+
+  // Temp variables.
+  double height = 0.0;
+  // Iterate over all blocks.
+  for (const BlockIndex& index : blocks) {
+    // Iterate over all voxels in said blocks.
+    const Block<HeightVoxel>& block = layer.getBlockByIndex(index);
+
+    for (size_t linear_index = 0; linear_index < num_voxels_per_block;
+         ++linear_index) {
+      Point coord = block.computeCoordinatesFromLinearIndex(linear_index);
+      if (visualizeHeightVoxels(block.getVoxelByLinearIndex(linear_index), coord,
+                       &height)) {
+        pcl::PointXYZI point;
+        point.x = coord.x();
+        point.y = coord.y();
+        point.z = coord.z();
+        point.intensity = height;
+        pointcloud->push_back(point);
+      }
+    }
+  }
+}
+
 inline void createDistancePointcloudFromTsdfLayerSlice(
     const Layer<TsdfVoxel>& layer, unsigned int free_plane_index,
     FloatingPoint free_plane_val, pcl::PointCloud<pcl::PointXYZI>* pointcloud) {
@@ -512,12 +601,17 @@ inline void createOccupancyBlocksFromTsdfLayer(
     const Layer<TsdfVoxel>& layer, const std::string& frame_id,
     const FloatingPoint occupied_voxel_min_distance,
     visualization_msgs::MarkerArray* marker_array) {
+  std::cout << " begin createOccupancyBlocksFromTsdfLayer" << std::endl;
+  auto start__ = std::chrono::system_clock::now();
   CHECK_NOTNULL(marker_array);
   createOccupancyBlocksFromLayer<TsdfVoxel>(
       layer,
       std::bind(visualizeOccupiedTsdfVoxels, std::placeholders::_1,
                 std::placeholders::_2, occupied_voxel_min_distance),
       frame_id, marker_array);
+  auto end__ = std::chrono::system_clock::now();
+  auto duration__ = std::chrono::duration<double>(end__ - start__).count();
+  std::cout << " end createOccupancyBlocksFromTsdfLayer, uses : " << duration__ << " s" << std::endl; 
 }
 
 inline void createOccupancyBlocksFromOccupancyLayer(

@@ -52,9 +52,22 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
       nh_private_.advertise<pcl::PointCloud<pcl::PointXYZRGB> >(
           "local_surface_pointcloud", 1, true);
 
+  local_height_pointcloud_pub_ =
+      nh_private_.advertise<sensor_msgs::PointCloud2>(
+          "local_height_pointcloud", 1, true); 
+
   tsdf_pointcloud_pub_ =
       nh_private_.advertise<pcl::PointCloud<pcl::PointXYZI> >("tsdf_pointcloud",
                                                               1, true);
+  
+  raw_height_pointcloud_pub_ =
+      nh_private_.advertise<pcl::PointCloud<pcl::PointXYZI> >("raw_height_pointcloud",
+                                                              1, true);
+
+  raw_height_layer_pub_ = nh_private_.advertise<voxblox_msgs::Layer> ("raw_height_layer",
+                                                                      1, true);
+      
+  
   occupancy_marker_pub_ =
       nh_private_.advertise<visualization_msgs::MarkerArray>("occupied_nodes",
                                                              1, true);
@@ -96,20 +109,26 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
   // Initialize TSDF Map and integrator.
   tsdf_map_.reset(new TsdfMap(config));
 
+  // Initialie Height Layer
+  raw_height_layer_.reset(
+      new Layer<HeightVoxel>(tsdf_map_->getTsdfLayer().voxel_size(),
+                           tsdf_map_->getTsdfLayer().voxels_per_side()));
+  
+
   std::string method("merged");
   nh_private_.param("method", method, method);
   if (method.compare("simple") == 0) {
     tsdf_integrator_.reset(new SimpleTsdfIntegrator(
-        integrator_config, tsdf_map_->getTsdfLayerPtr()));
+        integrator_config, tsdf_map_->getTsdfLayerPtr(), raw_height_layer_.get()));
   } else if (method.compare("merged") == 0) {
     tsdf_integrator_.reset(new MergedTsdfIntegrator(
-        integrator_config, tsdf_map_->getTsdfLayerPtr()));
+        integrator_config, tsdf_map_->getTsdfLayerPtr(), raw_height_layer_.get()));
   } else if (method.compare("fast") == 0) {
     tsdf_integrator_.reset(new FastTsdfIntegrator(
-        integrator_config, tsdf_map_->getTsdfLayerPtr()));
+        integrator_config, tsdf_map_->getTsdfLayerPtr(), raw_height_layer_.get()));
   } else {
     tsdf_integrator_.reset(new SimpleTsdfIntegrator(
-        integrator_config, tsdf_map_->getTsdfLayerPtr()));
+        integrator_config, tsdf_map_->getTsdfLayerPtr(), raw_height_layer_.get()));
   }
 
   mesh_layer_.reset(new MeshLayer(tsdf_map_->block_size()));
@@ -316,6 +335,7 @@ void TsdfServer::processPointCloudMessageAndInsert(
     ROS_INFO("Integrating a pointcloud with %lu points.", points_C.size());
   }
 
+  publishLocalHeightPointCloud(T_G_C_refined, points_C, is_freespace_pointcloud);
   ros::WallTime start = ros::WallTime::now();
   integratePointcloud(T_G_C_refined, points_C, colors, is_freespace_pointcloud);
   ros::WallTime end = ros::WallTime::now();
@@ -381,6 +401,7 @@ void TsdfServer::insertPointcloud(
     constexpr bool is_freespace_pointcloud = false;
     processPointCloudMessageAndInsert(pointcloud_msg, T_G_C,
                                       is_freespace_pointcloud);
+    //todo : probably  integrate height here
     processed_any = true;
   }
 
@@ -428,6 +449,19 @@ void TsdfServer::integratePointcloud(const Transformation& T_G_C,
                                         is_freespace_pointcloud);
 }
 
+
+void TsdfServer::publishLocalHeightPointCloud(const Transformation& T_G_C,
+                                     const Pointcloud& ptcloud_C,
+                                     const bool is_freespace_pointcloud) {
+  // iterate through ptcloud_C,
+  Pointcloud local_height_pcl;
+  // put 8m square to the message
+  sensor_msgs::PointCloud2 local_height_pcl_msgs;
+  pcl::toROSMsg(local_)
+  // publish message
+}
+
+
 void TsdfServer::publishAllUpdatedTsdfVoxels() {
   // Create a pointcloud with distance = intensity.
   pcl::PointCloud<pcl::PointXYZI> pointcloud;
@@ -436,6 +470,16 @@ void TsdfServer::publishAllUpdatedTsdfVoxels() {
 
   pointcloud.header.frame_id = world_frame_;
   tsdf_pointcloud_pub_.publish(pointcloud);
+}
+
+void TsdfServer::publishRawHeightVoxels() {
+  // Create a pointcloud with distance = intensity.
+  pcl::PointCloud<pcl::PointXYZI> pointcloud;
+
+  createHeightPointcloudFromHeightLayer(*raw_height_layer_, &pointcloud);
+
+  pointcloud.header.frame_id = world_frame_;
+  raw_height_pointcloud_pub_.publish(pointcloud);
 }
 
 void TsdfServer::publishTsdfSurfacePoints() {
@@ -455,10 +499,12 @@ void TsdfServer::publishTsdfLocalSurfacePoints() {
   pcl::PointCloud<pcl::PointXYZRGB> pointcloud;
   const float surface_distance_thresh = tsdf_map_->getTsdfLayer().voxel_size() *
                                         surface_min_distance_voxel_size_factor_;
+  ros::WallTime start = ros::WallTime::now();
   createLocalSurfacePointcloudFromTsdfLayer(tsdf_map_->getTsdfLayer(),
                                             surface_distance_thresh,
                                             &pointcloud, last_T_G_C_);
-
+  ros::WallTime end = ros::WallTime::now();
+  std::cout << "create LocalSurface point in " << (end - start).toSec() << " s" << std::endl;
   pointcloud.header.frame_id = world_frame_;
   local_surface_pointcloud_pub_.publish(pointcloud);
 }
@@ -485,6 +531,7 @@ void TsdfServer::publishSlices() {
 }
 
 void TsdfServer::publishMap(bool reset_remote_map) {
+  std::cout << "============== start publish tsdf map" << std::endl;
   if (!publish_tsdf_map_) {
     return;
   }
@@ -506,17 +553,33 @@ void TsdfServer::publishMap(bool reset_remote_map) {
     }
     this->tsdf_map_pub_.publish(layer_msg);
     publish_map_timer.Stop();
+
+    voxblox_msgs::Layer height_layer_msg;
+    serializeLayerAsMsg<HeightVoxel>(*this->raw_height_layer_,
+                                   only_updated, &height_layer_msg);
+    if (reset_remote_map) {
+      height_layer_msg.action = static_cast<uint8_t>(MapDerializationAction::kReset);
+    }
+    this->raw_height_layer_pub_.publish(height_layer_msg);
+
   }
   num_subscribers_tsdf_map_ = subscribers;
+  std::cout << "============== end publish tsdf map" << std::endl;
+
 }
 
 void TsdfServer::publishPointclouds() {
   // Combined function to publish all possible pointcloud messages -- surface
   // pointclouds, updated points, and occupied points.
-  publishAllUpdatedTsdfVoxels();
-  publishTsdfSurfacePoints();
+  // std::cout << "publishAllUpdatedTsdfVoxels" << std::endl;
+  // publishAllUpdatedTsdfVoxels();
+  // std::cout << "publishTsdfSurfacePoints" << std::endl;
+  // publishTsdfSurfacePoints();
   publishTsdfLocalSurfacePoints();
-  publishTsdfOccupiedNodes();
+  // std::cout << "publishTsdfOccupiedNodes" << std::endl;
+  // publishTsdfOccupiedNodes();
+  // std::cout << "publishRawHeightVoxels" << std::endl;
+  publishRawHeightVoxels();
   if (publish_slices_) {
     publishSlices();
   }
