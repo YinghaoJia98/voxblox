@@ -58,11 +58,6 @@ class TsdfServer {
   void integratePointcloud(const Transformation& T_G_C,
                            const Pointcloud& ptcloud_C, const Colors& colors,
                            const bool is_freespace_pointcloud = false);
-  
-  void publishLocalHeightPointCloud(const Transformation& T_G_C,
-                                    const Pointcloud& ptcloud_C,
-                                    const bool is_freespace_pointcloud = false);
-
   virtual void newPoseCallback(const Transformation& /*new_pose*/) {
     // Do nothing.
   }
@@ -151,7 +146,6 @@ class TsdfServer {
   ros::Publisher occupancy_marker_pub_;
   ros::Publisher icp_transform_pub_;
 
-  ros::Publisher local_height_pointcloud_pub_;
   /// Publish the complete map for other nodes to consume.
   ros::Publisher tsdf_map_pub_;
 

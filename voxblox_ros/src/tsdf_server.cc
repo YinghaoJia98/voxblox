@@ -52,10 +52,6 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
       nh_private_.advertise<pcl::PointCloud<pcl::PointXYZRGB> >(
           "local_surface_pointcloud", 1, true);
 
-  local_height_pointcloud_pub_ =
-      nh_private_.advertise<sensor_msgs::PointCloud2>(
-          "local_height_pointcloud", 1, true); 
-
   tsdf_pointcloud_pub_ =
       nh_private_.advertise<pcl::PointCloud<pcl::PointXYZI> >("tsdf_pointcloud",
                                                               1, true);
@@ -335,7 +331,6 @@ void TsdfServer::processPointCloudMessageAndInsert(
     ROS_INFO("Integrating a pointcloud with %lu points.", points_C.size());
   }
 
-  publishLocalHeightPointCloud(T_G_C_refined, points_C, is_freespace_pointcloud);
   ros::WallTime start = ros::WallTime::now();
   integratePointcloud(T_G_C_refined, points_C, colors, is_freespace_pointcloud);
   ros::WallTime end = ros::WallTime::now();
@@ -449,19 +444,6 @@ void TsdfServer::integratePointcloud(const Transformation& T_G_C,
                                         is_freespace_pointcloud);
 }
 
-
-void TsdfServer::publishLocalHeightPointCloud(const Transformation& T_G_C,
-                                     const Pointcloud& ptcloud_C,
-                                     const bool is_freespace_pointcloud) {
-  // iterate through ptcloud_C,
-  Pointcloud local_height_pcl;
-  // put 8m square to the message
-  sensor_msgs::PointCloud2 local_height_pcl_msgs;
-  pcl::toROSMsg(local_)
-  // publish message
-}
-
-
 void TsdfServer::publishAllUpdatedTsdfVoxels() {
   // Create a pointcloud with distance = intensity.
   pcl::PointCloud<pcl::PointXYZI> pointcloud;
@@ -499,12 +481,10 @@ void TsdfServer::publishTsdfLocalSurfacePoints() {
   pcl::PointCloud<pcl::PointXYZRGB> pointcloud;
   const float surface_distance_thresh = tsdf_map_->getTsdfLayer().voxel_size() *
                                         surface_min_distance_voxel_size_factor_;
-  ros::WallTime start = ros::WallTime::now();
   createLocalSurfacePointcloudFromTsdfLayer(tsdf_map_->getTsdfLayer(),
                                             surface_distance_thresh,
                                             &pointcloud, last_T_G_C_);
-  ros::WallTime end = ros::WallTime::now();
-  std::cout << "create LocalSurface point in " << (end - start).toSec() << " s" << std::endl;
+
   pointcloud.header.frame_id = world_frame_;
   local_surface_pointcloud_pub_.publish(pointcloud);
 }
@@ -579,7 +559,7 @@ void TsdfServer::publishPointclouds() {
   // std::cout << "publishTsdfOccupiedNodes" << std::endl;
   // publishTsdfOccupiedNodes();
   // std::cout << "publishRawHeightVoxels" << std::endl;
-  publishRawHeightVoxels();
+  // publishRawHeightVoxels();
   if (publish_slices_) {
     publishSlices();
   }
