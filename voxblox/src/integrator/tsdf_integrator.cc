@@ -707,6 +707,7 @@ void FastTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
     voxel_observed_approx_set_.resetApproxSet();
   }
 
+  
   std::unique_ptr<ThreadSafeIndex> index_getter(
       ThreadSafeIndexFactory::get(config_.integration_order_mode, points_C));
 
@@ -726,7 +727,7 @@ void FastTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
   std::cout << "********** end integrate tsdf poincloud in " << duration__ << " s" << std::endl;
     
 
-  // integrateHeight(T_G_C, points_C, freespace_points);  // add is point valid
+  integrateHeight(T_G_C, points_C, freespace_points);  // add is point valid
 
   integrate_timer.Stop();
 
