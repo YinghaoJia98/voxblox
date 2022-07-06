@@ -59,15 +59,6 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
   tsdf_pointcloud_pub_ =
       nh_private_.advertise<pcl::PointCloud<pcl::PointXYZI> >("tsdf_pointcloud",
                                                               1, true);
-  
-  raw_height_pointcloud_pub_ =
-      nh_private_.advertise<pcl::PointCloud<pcl::PointXYZI> >("raw_height_pointcloud",
-                                                              1, true);
-
-  raw_height_layer_pub_ = nh_private_.advertise<voxblox_msgs::Layer> ("raw_height_layer",
-                                                                      1, true);
-      
-  
   occupancy_marker_pub_ =
       nh_private_.advertise<visualization_msgs::MarkerArray>("occupied_nodes",
                                                              1, true);
@@ -109,26 +100,20 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
   // Initialize TSDF Map and integrator.
   tsdf_map_.reset(new TsdfMap(config));
 
-  // Initialie Height Layer
-  raw_height_layer_.reset(
-      new Layer<HeightVoxel>(tsdf_map_->getTsdfLayer().voxel_size(),
-                           tsdf_map_->getTsdfLayer().voxels_per_side()));
-  
-
   std::string method("merged");
   nh_private_.param("method", method, method);
   if (method.compare("simple") == 0) {
     tsdf_integrator_.reset(new SimpleTsdfIntegrator(
-        integrator_config, tsdf_map_->getTsdfLayerPtr(), raw_height_layer_.get()));
+        integrator_config, tsdf_map_->getTsdfLayerPtr()));
   } else if (method.compare("merged") == 0) {
     tsdf_integrator_.reset(new MergedTsdfIntegrator(
-        integrator_config, tsdf_map_->getTsdfLayerPtr(), raw_height_layer_.get()));
+        integrator_config, tsdf_map_->getTsdfLayerPtr()));
   } else if (method.compare("fast") == 0) {
     tsdf_integrator_.reset(new FastTsdfIntegrator(
-        integrator_config, tsdf_map_->getTsdfLayerPtr(), raw_height_layer_.get()));
+        integrator_config, tsdf_map_->getTsdfLayerPtr()));
   } else {
     tsdf_integrator_.reset(new SimpleTsdfIntegrator(
-        integrator_config, tsdf_map_->getTsdfLayerPtr(), raw_height_layer_.get()));
+        integrator_config, tsdf_map_->getTsdfLayerPtr()));
   }
 
   mesh_layer_.reset(new MeshLayer(tsdf_map_->block_size()));
@@ -401,7 +386,6 @@ void TsdfServer::insertPointcloud(
     constexpr bool is_freespace_pointcloud = false;
     processPointCloudMessageAndInsert(pointcloud_msg, T_G_C,
                                       is_freespace_pointcloud);
-    //todo : probably  integrate height here
     processed_any = true;
   }
 
@@ -487,16 +471,6 @@ void TsdfServer::publishAllUpdatedTsdfVoxels() {
   tsdf_pointcloud_pub_.publish(pointcloud);
 }
 
-void TsdfServer::publishRawHeightVoxels() {
-  // Create a pointcloud with distance = intensity.
-  pcl::PointCloud<pcl::PointXYZI> pointcloud;
-
-  createHeightPointcloudFromHeightLayer(*raw_height_layer_, &pointcloud);
-
-  pointcloud.header.frame_id = world_frame_;
-  raw_height_pointcloud_pub_.publish(pointcloud);
-}
-
 void TsdfServer::publishTsdfSurfacePoints() {
   // Create a pointcloud with distance = intensity.
   pcl::PointCloud<pcl::PointXYZRGB> pointcloud;
@@ -568,15 +542,6 @@ void TsdfServer::publishMap(bool reset_remote_map) {
     }
     this->tsdf_map_pub_.publish(layer_msg);
     publish_map_timer.Stop();
-
-    voxblox_msgs::Layer height_layer_msg;
-    serializeLayerAsMsg<HeightVoxel>(*this->raw_height_layer_,
-                                   only_updated, &height_layer_msg);
-    if (reset_remote_map) {
-      height_layer_msg.action = static_cast<uint8_t>(MapDerializationAction::kReset);
-    }
-    this->raw_height_layer_pub_.publish(height_layer_msg);
-
   }
   num_subscribers_tsdf_map_ = subscribers;
   std::cout << "============== end publish tsdf map" << std::endl;
@@ -593,8 +558,6 @@ void TsdfServer::publishPointclouds() {
   publishTsdfLocalSurfacePoints();
   // std::cout << "publishTsdfOccupiedNodes" << std::endl;
   // publishTsdfOccupiedNodes();
-  // std::cout << "publishRawHeightVoxels" << std::endl;
-  publishRawHeightVoxels();
   if (publish_slices_) {
     publishSlices();
   }

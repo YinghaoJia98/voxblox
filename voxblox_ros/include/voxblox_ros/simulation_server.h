@@ -102,8 +102,6 @@ class SimulationServer {
   std::unique_ptr<Layer<EsdfVoxel> > esdf_test_;
   std::unique_ptr<Layer<OccupancyVoxel> > occ_test_;
 
-  std::unique_ptr<Layer<HeightVoxel> > raw_height_test_;
-
   // Integrators:
   std::unique_ptr<TsdfIntegratorBase> tsdf_integrator_;
   std::unique_ptr<EsdfIntegrator> esdf_integrator_;

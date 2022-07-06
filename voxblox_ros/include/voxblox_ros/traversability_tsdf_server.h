@@ -16,14 +16,8 @@ namespace voxblox {
 
     void integrateTraversability(const Pointcloud& traversability_pointcloud, const Traversabilities& traversabilities);
 
-    void integrateHeight(const Pointcloud& pointcloud);
-
     void publishTraversabilityLayer();
     void publishPointclouds() override;
-
-    void publishHeightLayer();
-    void publishHeightPointcloud();
-    void publishHeightPointcloudPlane();
 
     void traversabilityCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg);
 
@@ -35,13 +29,6 @@ namespace voxblox {
 
     std::shared_ptr<Layer<TraversabilityVoxel>> traversability_layer_;
     std::unique_ptr<TraversabilityTsdfIntegrator> traversability_tsdf_integrator_;
-
-    std::shared_ptr<Layer<HeightVoxel>> height_layer_;
-    ros::Publisher height_layer_pub_;
-    ros::Publisher height_pointcloud_pub_;
-    ros::Publisher height_pointcloud_plane_pub_;
-
-
   };
 
 }  // namespace voxblox

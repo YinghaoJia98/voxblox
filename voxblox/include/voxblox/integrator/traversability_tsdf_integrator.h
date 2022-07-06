@@ -11,18 +11,13 @@ class TraversabilityTsdfIntegrator {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     TraversabilityTsdfIntegrator(const Layer<TsdfVoxel>& tsdf_layer,
-                                 Layer<TraversabilityVoxel>* traversability_layer,
-                                 Layer<HeightVoxel>* height_layer);
+                                 Layer<TraversabilityVoxel>* traversability_layer);
 
     void integrateTraversability(const voxblox::Pointcloud &pointcloud, const Traversabilities& traversabilities);
-
-    void integrateHeight(const voxblox::Pointcloud &pointcloud);
 
   private:
     const Layer<TsdfVoxel>& tsdf_layer_;
     Layer<TraversabilityVoxel>* traversability_layer_;
-    Layer<HeightVoxel>* height_layer_;
-    
   };
 
 }  // namespace voxblox

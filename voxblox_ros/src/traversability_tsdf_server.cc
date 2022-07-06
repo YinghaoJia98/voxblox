@@ -10,14 +10,9 @@ TraversabilityTsdfServer::TraversabilityTsdfServer(const ros::NodeHandle& nh,
       new Layer<TraversabilityVoxel>(tsdf_map_->getTsdfLayer().voxel_size(),
                                         tsdf_map_->getTsdfLayer().voxels_per_side()));
 
-  height_layer_.reset(
-    new Layer<HeightVoxel>(tsdf_map_->getTsdfLayer().voxel_size(),
-                           tsdf_map_->getTsdfLayer().voxels_per_side()));
-  
   traversability_tsdf_integrator_.reset(
       new TraversabilityTsdfIntegrator(tsdf_map_->getTsdfLayer(),
-                                          traversability_layer_.get(),
-                                          height_layer_.get()));
+                                          traversability_layer_.get()));
 
   // Publishers for output.
   traversability_layer_pub_ = nh_private_.advertise<voxblox_msgs::Layer> ("traversability_layer",
@@ -27,19 +22,7 @@ TraversabilityTsdfServer::TraversabilityTsdfServer(const ros::NodeHandle& nh,
   traversability_pointcloud_pub_ = nh_private_.advertise<pcl::PointCloud<pcl::PointXYZI>> ("traversability_pointcloud",
                                                                                             1,
                                                                                             true);
-  
-  height_layer_pub_ = nh_private_.advertise<voxblox_msgs::Layer> ("height_layer",
-                                                                          1,
-                                                                          true);
 
-  height_pointcloud_pub_ = nh_private_.advertise<pcl::PointCloud<pcl::PointXYZI>> ("height_pointcloud",
-                                                                                            1,
-                                                                                            true);
-
-  height_pointcloud_plane_pub_ = nh_private_.advertise<pcl::PointCloud<pcl::PointXYZI>> ("height_pointcloud_plane",
-                                                                                            1,
-                                                                                            true);
-  
   traversability_sub_ = nh_private_.subscribe("traversability",
                                               1,
                                               &TraversabilityTsdfServer::traversabilityCallback,
@@ -62,20 +45,6 @@ void TraversabilityTsdfServer::publishTraversabilityLayer() {
   traversability_layer_pub_.publish(layer_msg);
 }
 
-void TraversabilityTsdfServer::integrateHeight(const Pointcloud& pointcloud) {
-  traversability_tsdf_integrator_->integrateHeight(pointcloud);
-}
-
-void TraversabilityTsdfServer::publishHeightLayer() {
-  voxblox_msgs::Layer layer_msg;
-
-  serializeLayerAsMsg<HeightVoxel>(*height_layer_,
-                                           false,
-                                           &layer_msg);
-
-  height_layer_pub_.publish(layer_msg);
-}
-
 void TraversabilityTsdfServer::publishPointclouds() {
   pcl::PointCloud<pcl::PointXYZI> pointcloud;
 
@@ -86,26 +55,6 @@ void TraversabilityTsdfServer::publishPointclouds() {
   traversability_pointcloud_pub_.publish(pointcloud);
 
   TsdfServer::publishPointclouds();
-}
-
-void TraversabilityTsdfServer::publishHeightPointcloud() {
-  pcl::PointCloud<pcl::PointXYZI> pointcloud;
-
-  createHeightPointcloudFromHeightLayer(*height_layer_, &pointcloud);
-
-  pointcloud.header.frame_id = world_frame_;
-
-  height_pointcloud_pub_.publish(pointcloud);
-}
-
-void TraversabilityTsdfServer::publishHeightPointcloudPlane() {
-  pcl::PointCloud<pcl::PointXYZI> pointcloud;
-
-  createHeightPointcloudPlaneFromHeightLayer(*height_layer_, &pointcloud);
-
-  pointcloud.header.frame_id = world_frame_;
-
-  height_pointcloud_plane_pub_.publish(pointcloud);
 }
 
 void TraversabilityTsdfServer::traversabilityCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg) {
@@ -119,7 +68,6 @@ void TraversabilityTsdfServer::traversabilityCallback(const sensor_msgs::PointCl
   pcl::fromROSMsg(*pointcloud_msg,
                   pointcloud_pcl);
 
-
   convertTraversabilityPointcloud(pointcloud_pcl,
                                   &traversability_pointcloud,
                                   &traversabilities);
@@ -128,17 +76,9 @@ void TraversabilityTsdfServer::traversabilityCallback(const sensor_msgs::PointCl
   integrateTraversability(traversability_pointcloud,
                           traversabilities);
 
-  // integrate the height here
-  integrateHeight(traversability_pointcloud);
-
-
   // publish the traversability layer and pointcloud
   publishTraversabilityLayer();
   publishPointclouds();
-
-  publishHeightLayer();
-  publishHeightPointcloud();
-  publishHeightPointcloudPlane();
 }
 
 }  // namespace voxblox

@@ -71,9 +71,6 @@ class TsdfServer {
   void publishTsdfLocalSurfacePoints();
   void publishTsdfOccupiedNodes();
 
-  void publishRawHeightVoxels();
-  void publishRawHeightLayer();
-
   virtual void publishSlices();
   /// Incremental update.
   virtual void updateMesh();
@@ -153,9 +150,6 @@ class TsdfServer {
   ros::Publisher local_height_pointcloud_pub_;
   /// Publish the complete map for other nodes to consume.
   ros::Publisher tsdf_map_pub_;
-
-  ros::Publisher raw_height_pointcloud_pub_;
-  ros::Publisher raw_height_layer_pub_;
 
   /// Subscriber to subscribe to another node generating the map.
   ros::Subscriber tsdf_map_sub_;
@@ -245,8 +239,6 @@ class TsdfServer {
   // Maps and integrators.
   std::shared_ptr<TsdfMap> tsdf_map_;
   std::unique_ptr<TsdfIntegratorBase> tsdf_integrator_;
-
-  std::shared_ptr<Layer<HeightVoxel>> raw_height_layer_;
 
   /// ICP matcher
   std::shared_ptr<ICP> icp_;

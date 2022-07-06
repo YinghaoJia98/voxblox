@@ -6,9 +6,8 @@ namespace voxblox {
 
 TsdfIntegratorBase::Ptr TsdfIntegratorFactory::create(
     const std::string& integrator_type_name,
-    const TsdfIntegratorBase::Config& config, Layer<TsdfVoxel>* layer, Layer<HeightVoxel>* raw_height_layer) {
+    const TsdfIntegratorBase::Config& config, Layer<TsdfVoxel>* layer) {
   CHECK_NOTNULL(layer);
-  CHECK_NOTNULL(raw_height_layer);
   CHECK(!integrator_type_name.empty());
 
   int integrator_type = 1;
@@ -16,7 +15,7 @@ TsdfIntegratorBase::Ptr TsdfIntegratorFactory::create(
        kTsdfIntegratorTypeNames) {
     if (integrator_type_name == valid_integrator_type_name) {
       return create(static_cast<TsdfIntegratorType>(integrator_type), config,
-                    layer, raw_height_layer);
+                    layer);
     }
     ++integrator_type;
   }
@@ -26,18 +25,17 @@ TsdfIntegratorBase::Ptr TsdfIntegratorFactory::create(
 
 TsdfIntegratorBase::Ptr TsdfIntegratorFactory::create(
     const TsdfIntegratorType integrator_type,
-    const TsdfIntegratorBase::Config& config, Layer<TsdfVoxel>* layer, Layer<HeightVoxel>* raw_height_layer) {
+    const TsdfIntegratorBase::Config& config, Layer<TsdfVoxel>* layer) {
   CHECK_NOTNULL(layer);
-  CHECK_NOTNULL(raw_height_layer);
   switch (integrator_type) {
     case TsdfIntegratorType::kSimple:
-      return TsdfIntegratorBase::Ptr(new SimpleTsdfIntegrator(config, layer, raw_height_layer));
+      return TsdfIntegratorBase::Ptr(new SimpleTsdfIntegrator(config, layer));
       break;
     case TsdfIntegratorType::kMerged:
-      return TsdfIntegratorBase::Ptr(new MergedTsdfIntegrator(config, layer, raw_height_layer));
+      return TsdfIntegratorBase::Ptr(new MergedTsdfIntegrator(config, layer));
       break;
     case TsdfIntegratorType::kFast:
-      return TsdfIntegratorBase::Ptr(new FastTsdfIntegrator(config, layer, raw_height_layer));
+      return TsdfIntegratorBase::Ptr(new FastTsdfIntegrator(config, layer));
       break;
     default:
       LOG(FATAL) << "Unknown TSDF integrator type: "
@@ -53,10 +51,9 @@ TsdfIntegratorBase::Ptr TsdfIntegratorFactory::create(
 // accessed by other threads.
 
 TsdfIntegratorBase::TsdfIntegratorBase(const Config& config,
-                                       Layer<TsdfVoxel>* layer,
-                                       Layer<HeightVoxel>* raw_height_layer)
+                                       Layer<TsdfVoxel>* layer)
     : config_(config) {
-  setLayer(layer, raw_height_layer);
+  setLayer(layer);
 
   if (config_.integrator_threads == 0) {
     LOG(WARNING) << "Automatic core count failed, defaulting to 1 threads";
@@ -76,13 +73,10 @@ TsdfIntegratorBase::TsdfIntegratorBase(const Config& config,
   CHECK_GT(config_.start_voxel_subsampling_factor, 0.0);
 }
 
-void TsdfIntegratorBase::setLayer(Layer<TsdfVoxel>* layer, Layer<HeightVoxel>* raw_height_layer) {
+void TsdfIntegratorBase::setLayer(Layer<TsdfVoxel>* layer) {
   CHECK_NOTNULL(layer);
-  CHECK_NOTNULL(raw_height_layer);
-
 
   layer_ = layer;
-  raw_height_layer_ = raw_height_layer;
 
   voxel_size_ = layer_->voxel_size();
   block_size_ = layer_->block_size();
@@ -318,8 +312,6 @@ void SimpleTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
   for (std::thread& thread : integration_threads) {
     thread.join();
   }
-  integrateHeight(T_G_C, points_C, freespace_points);
-
   integrate_timer.Stop();
 
   timing::Timer insertion_timer("inserting_missed_blocks");
@@ -475,8 +467,6 @@ void MergedTsdfIntegrator::integrateVoxel(
 
   const Point merged_point_G = T_G_C * merged_point_C;
 
-  integrateHeight(merged_point_G);
-
   RayCaster ray_caster(origin, merged_point_G, clearing_ray,
                        config_.voxel_carving_enabled, config_.max_ray_length_m,
                        voxel_size_inv_, config_.default_truncation_distance);
@@ -556,69 +546,6 @@ void MergedTsdfIntegrator::integrateRays(
   insertion_timer.Stop();
 }
 
-
-// this is not thread safe
-void TsdfIntegratorBase::integrateHeight(const Point &point) {
-  
-    std::cout << "start integrateHeight" << std::endl;
-    auto cur_point = point;
-    cur_point[2] = 0; // store in the layer where z=0;
-    BlockIndex  block_index = raw_height_layer_->computeBlockIndexFromCoordinates(cur_point);
-
-    // If there's no block at the new point yet, storage is allocated
-    if(!raw_height_layer_->hasBlock(block_index)) {
-      raw_height_layer_->allocateBlockPtrByCoordinates(cur_point);
-    }
-
-    HeightVoxel* height_voxel_ptr = raw_height_layer_->getVoxelPtrByCoordinates(cur_point);
-
-    const float height = height_voxel_ptr->height;
-    const unsigned int wgt = height_voxel_ptr->n_values;
-
-    height_voxel_ptr->height = (height * wgt + point[2]) / (1.0 + wgt);
-    height_voxel_ptr->n_values += 1;
-    std::cout << "end integrateHeight" << std::endl;
-    
-}
-
-void TsdfIntegratorBase::integrateHeight(const Transformation& T_G_C, const Pointcloud& points_C, const bool freespace_point) {
-  
-  std::cout << "TsdfIntegratorBase::start integrateHeight with " << points_C.size() << " points" << std::endl;
-  auto start__ = std::chrono::system_clock::now();
-  int n__ = 0;
-  for (unsigned int i = 0; i < points_C.size(); ++i) {
-    const Point point_C = points_C[i];
-    bool is_clearing;
-    if(!isPointValid(point_C, freespace_point, &is_clearing))
-      continue;
-    n__++;
-    const Point point_G = T_G_C * points_C[i];
-    auto cur_point = point_G;
-    cur_point[2] = 0; // store in the layer where z=0;
-    BlockIndex  block_index = raw_height_layer_->computeBlockIndexFromCoordinates(cur_point);
-
-    // If there's no block at the new point yet, storage is allocated
-    if(!raw_height_layer_->hasBlock(block_index)) {
-      raw_height_layer_->allocateBlockPtrByCoordinates(cur_point);
-    }
-
-    HeightVoxel* height_voxel_ptr = raw_height_layer_->getVoxelPtrByCoordinates(cur_point);
-
-    const float height = height_voxel_ptr->height;
-    const unsigned int wgt = height_voxel_ptr->n_values;
-
-    height_voxel_ptr->height = (height * wgt + point_G[2]) / (1.0 + wgt);
-    height_voxel_ptr->n_values += 1;
-  }
-  auto end__ = std::chrono::system_clock::now();
-  auto duration__ = std::chrono::duration<double>(end__ - start__).count();
-
-  std::cout << "TsdfIntegratorBase::end integrate height poincloud of size " << n__ << " in " << duration__ << " s" << std::endl;
-   
-    
-}
-
-
 void FastTsdfIntegrator::integrateFunction(const Transformation& T_G_C,
                                            const Pointcloud& points_C,
                                            const Colors& colors,
@@ -640,7 +567,6 @@ void FastTsdfIntegrator::integrateFunction(const Transformation& T_G_C,
 
     const Point origin = T_G_C.getPosition();
     const Point point_G = T_G_C * point_C;
-
     // Checks to see if another ray in this scan has already started 'close'
     // to this location. If it has then we skip ray casting this point. We
     // measure if a start location is 'close' to another points by inserting
@@ -707,7 +633,6 @@ void FastTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
     voxel_observed_approx_set_.resetApproxSet();
   }
 
-  
   std::unique_ptr<ThreadSafeIndex> index_getter(
       ThreadSafeIndexFactory::get(config_.integration_order_mode, points_C));
 
@@ -725,9 +650,6 @@ void FastTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
   auto duration__ = std::chrono::duration<double>(end__ - start__).count();
 
   std::cout << "********** end integrate tsdf poincloud in " << duration__ << " s" << std::endl;
-    
-
-  integrateHeight(T_G_C, points_C, freespace_points);  // add is point valid
 
   integrate_timer.Stop();
 
