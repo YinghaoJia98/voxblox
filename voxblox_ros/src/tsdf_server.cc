@@ -335,7 +335,7 @@ void TsdfServer::processPointCloudMessageAndInsert(
     ROS_INFO("Integrating a pointcloud with %lu points.", points_C.size());
   }
 
-  publishLocalHeightPointCloud(T_G_C_refined, points_C, is_freespace_pointcloud);
+  publishLocalHeightPointCloud(T_G_C_refined, points_C);
   ros::WallTime start = ros::WallTime::now();
   integratePointcloud(T_G_C_refined, points_C, colors, is_freespace_pointcloud);
   ros::WallTime end = ros::WallTime::now();
@@ -451,14 +451,29 @@ void TsdfServer::integratePointcloud(const Transformation& T_G_C,
 
 
 void TsdfServer::publishLocalHeightPointCloud(const Transformation& T_G_C,
-                                     const Pointcloud& ptcloud_C,
-                                     const bool is_freespace_pointcloud) {
+                                     const Pointcloud& ptcloud_C) {
   // iterate through ptcloud_C,
-  Pointcloud local_height_pcl;
-  // put 8m square to the message
+  pcl::PointCloud<pcl::PointXYZ> local_height_pcl;
+  const Point origin = T_G_C.getPosition();
+  for(auto point_C : ptcloud_C)
+  {
+    const Point point_G = T_G_C * point_C;
+    // point_G lies within 8m square
+    if (abs(point_G[0] - origin[0]) <= 4 && abs(point_G[1] - origin[1]) <= 4 && abs(point_G[2]) < INFINITY)
+    {
+      pcl::PointXYZ height_point;
+      height_point.x = point_G[0];
+      height_point.y = point_G[1];
+      height_point.z = point_G[2];
+      local_height_pcl.push_back(height_point);
+    }
+  }
+  // format to the message
   sensor_msgs::PointCloud2 local_height_pcl_msgs;
-  pcl::toROSMsg(local_)
+  pcl::toROSMsg(local_height_pcl, local_height_pcl_msgs);
+  local_height_pcl_msgs.header.frame_id = "map";
   // publish message
+  local_height_pointcloud_pub_.publish(local_height_pcl_msgs);
 }
 
 

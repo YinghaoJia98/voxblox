@@ -60,8 +60,7 @@ class TsdfServer {
                            const bool is_freespace_pointcloud = false);
   
   void publishLocalHeightPointCloud(const Transformation& T_G_C,
-                                    const Pointcloud& ptcloud_C,
-                                    const bool is_freespace_pointcloud = false);
+                                    const Pointcloud& ptcloud_C);
 
   virtual void newPoseCallback(const Transformation& /*new_pose*/) {
     // Do nothing.

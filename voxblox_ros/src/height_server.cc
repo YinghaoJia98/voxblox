@@ -7,7 +7,7 @@ HeightServer::HeightServer(const ros::NodeHandle& nh,
                            const ros::NodeHandle& nh_private)
     : nh_(nh),
       nh_private_(nh_private),
-      world_frame_("world")
+      world_frame_("map")
 {
 
   TsdfMap::Config tsdf_config = getTsdfMapConfigFromRosParam(nh_private);
@@ -31,10 +31,10 @@ HeightServer::HeightServer(const ros::NodeHandle& nh,
                                                                                             1,
                                                                                             true);
   
-  height_sub_ = nh_private_.subscribe("traversability",
-                                              1,
-                                              &HeightServer::heightCallback,
-                                              this);
+  height_sub_ = nh_private_.subscribe("/voxblox_node/local_height_pointcloud",
+                                       1,
+                                       &HeightServer::heightCallback,
+                                       this);
 }
 
 
@@ -43,6 +43,8 @@ void HeightServer::integrateHeight(const Pointcloud& pointcloud) {
 }
 
 void HeightServer::publishHeightLayer() {
+  std::cout << "publish height layer with voxel size " << height_layer_.get()->voxel_size() << std::endl;
+  
   voxblox_msgs::Layer layer_msg;
 
   serializeLayerAsMsg<HeightVoxel>(*height_layer_,
@@ -76,20 +78,17 @@ void HeightServer::publishHeightPointcloudPlane() {
 void HeightServer::heightCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg) {
 
   // convert the msg to pcl and then to a voxblox pointcloud and traversability vector
-  Pointcloud traversability_pointcloud;
+  Pointcloud height_pointcloud;
 
-  pcl::PointCloud<pcl::PointXYZI> pointcloud_pcl;
+  pcl::PointCloud<pcl::PointXYZ> pointcloud_pcl;
 
   pcl::fromROSMsg(*pointcloud_msg,
                   pointcloud_pcl);
 
-
-//   convertTraversabilityPointcloud(pointcloud_pcl,
-//                                   &traversability_pointcloud,
-//                                   &traversabilities);
+  convertPointcloud(pointcloud_pcl, &height_pointcloud);
 
   // integrate the height here
-  integrateHeight(traversability_pointcloud);
+  integrateHeight(height_pointcloud);
 
   publishHeightLayer();
   publishHeightPointcloud();
