@@ -8,5 +8,6 @@
     </node>
 
     <node name="voxblox_height_node" pkg="voxblox_ros" type="height_server" output="screen" args="-alsologtostderr" clear_params="true" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' ">
+        <remap from="/voxblox_node/local_height_pointcloud" to = "/voxblox_tsdf_node/local_height_pointcloud" />
     </node>
 </launch> 
