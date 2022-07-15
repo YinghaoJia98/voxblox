@@ -1,0 +1,40 @@
+voxblox_tsdf_node:
+    accumulate_icp_corrections: True
+    allow_clear: False
+    clearing_ray_weight_factor: 0.01
+    color_mode: "height"
+    enable_icp: False
+    icp_refine_roll_pitch: False
+    integration_order_mode: "sorted"
+    max_consecutive_ray_collisions: 2
+    max_ray_length_m: 8
+    max_weight: 50
+    mesh_min_weight: 1e-4
+    method: "fast"
+    min_time_between_msgs_sec: 0.0
+    surface_min_distance_voxel_size_factor: 0.8 #0.9 # Inverse multipled with the voxelsize if its a boundary
+    occupancy_min_distance_voxel_size_factor: 0.88 #0.5 # Inverse multipled with the voxelsize if its a boundary
+    pointcloud_queue_size: 3
+    publish_pointclouds: True
+    publish_slices: False
+    publish_traversable: False
+    publish_tsdf_info: False
+    publish_tsdf_map: True ###False
+    slice_level: 1.0
+    timestamp_tolerance_sec: 0.001
+    traversability_radius: 0.7
+    truncation_distance: 0.2 # 2 times the tsdf_voxel_size
+    tsdf_voxel_size: 0.1
+    tsdf_voxels_per_side: 16
+    update_map_every_n_sec: 20.0
+    update_mesh_every_n_sec: 200.0
+    use_const_weight: False
+    use_freespace_pointcloud: False
+    use_tf_transforms: True
+    use_weight_dropoff: True
+    verbose: False
+    voxel_carving_enabled: True
+    weight_ray_by_range: False
+    world_frame: map
+    min_ray_length: 0.1
+    publish_pointclouds_on_update: True
