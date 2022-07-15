@@ -1,4 +1,6 @@
 voxblox_tsdf_node:
+    # pointcloud: /bpearl_front_bpearl_back/point_cloud
+    world_frame: map
     accumulate_icp_corrections: True
     allow_clear: False
     clearing_ray_weight_factor: 0.01
