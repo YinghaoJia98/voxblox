@@ -24,7 +24,15 @@ void HeightIntegrator::integrateHeight(const Pointcloud &pointcloud) {
     const float height = height_voxel_ptr->height;
     const unsigned int wgt = height_voxel_ptr->n_values;
 
-    height_voxel_ptr->height = (height * wgt + pointcloud[i][2]) / (1.0 + wgt);
+    // height_voxel_ptr->height = (height * wgt + pointcloud[i][2]) / (1.0 + wgt);
+    if(height_voxel_ptr->n_values > 0)
+    {
+      height_voxel_ptr->height = std::min(height, pointcloud[i][2]);
+    }
+    else
+    {
+      height_voxel_ptr->height = pointcloud[i][2];
+    }
     height_voxel_ptr->n_values += 1;
   }
   auto end__ = std::chrono::system_clock::now();
