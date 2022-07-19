@@ -157,6 +157,16 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
         nh_private_.createTimer(ros::Duration(publish_map_every_n_sec),
                                 &TsdfServer::publishMapEvent, this);
   }
+
+  // double publish_poinclouds_every_n_sec = -1;
+  // nh_private_.param("publish_poinclouds_every_n_sec", publish_poinclouds_every_n_sec,
+  //                   publish_poinclouds_every_n_sec);
+
+  // if (publish_poinclouds_every_n_sec > 0.0) {
+  //   publish_pointclouds_timer_ =
+  //       nh_private_.createTimer(ros::Duration(publish_poinclouds_every_n_sec),
+  //                               &TsdfServer::publishPointcloudsEvent, this);
+  // }
 }
 
 void TsdfServer::getServerConfigFromRosParam(
@@ -394,6 +404,7 @@ void TsdfServer::insertPointcloud(
   }
 
   if (publish_pointclouds_on_update_) {
+    std::cout << "publish on update" << std::endl;
     publishPointclouds();
   }
 
@@ -551,7 +562,7 @@ void TsdfServer::publishMap(bool reset_remote_map) {
     publish_map_timer.Stop();
   }
   num_subscribers_tsdf_map_ = subscribers;
-  std::cout << "============== end publish tsdf map" << std::endl;
+  std::cout << "============== end publish tsdf map with " << subscribers << " subscribers" << std::endl;
 
 }
 
@@ -594,9 +605,10 @@ void TsdfServer::updateMesh() {
 
   publish_mesh_timer.Stop();
 
-  if (publish_pointclouds_ && !publish_pointclouds_on_update_) {
-    publishPointclouds();
-  }
+  // if (publish_pointclouds_ && !publish_pointclouds_on_update_) {
+  //   std::cout << "publish in update mesh" << std::endl;
+  //   publishPointclouds();
+  // }
 }
 
 bool TsdfServer::generateMesh() {
@@ -703,6 +715,10 @@ void TsdfServer::updateMeshEvent(const ros::TimerEvent& /*event*/) {
 
 void TsdfServer::publishMapEvent(const ros::TimerEvent& /*event*/) {
   publishMap();
+}
+
+void TsdfServer::publishPointcloudsEvent(const ros::TimerEvent& /*event*/) {
+  publishPointclouds();
 }
 
 void TsdfServer::clear() {

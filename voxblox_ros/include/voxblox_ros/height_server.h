@@ -17,8 +17,12 @@ namespace voxblox {
 
     
     void publishHeightLayer();
+
+    void publishPointclouds();
     void publishHeightPointcloud();
     void publishHeightPointcloudPlane();
+
+    void publishPointcloudsEvent(const ros::TimerEvent& event);
 
     void heightCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg);
 
@@ -36,6 +40,8 @@ namespace voxblox {
     ros::Publisher height_pointcloud_pub_;
     ros::Publisher height_pointcloud_plane_pub_;
 
+    ros::Timer publish_pointclouds_timer_;
+    bool publish_pointclouds_on_update_;
 
   };
 
