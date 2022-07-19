@@ -40,3 +40,9 @@ voxblox_tsdf_node:
     world_frame: map
     min_ray_length: 0.1
     publish_pointclouds_on_update: True
+    height_cutoff: 2.0
+
+voxblox_height_node:
+    height_voxel_size: 0.1
+    height_voxels_per_side: 16
+    input_pointcloud_topic_name: "/voxblox_tsdf_node/local_height_pointcloud"

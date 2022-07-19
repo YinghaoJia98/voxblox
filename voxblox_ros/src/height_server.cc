@@ -14,9 +14,16 @@ HeightServer::HeightServer(const ros::NodeHandle& nh,
   // height_layer_.reset(
   //   new Layer<HeightVoxel>(tsdf_config.tsdf_voxel_size,
   //                          tsdf_config.tsdf_voxels_per_side));
+  double voxel_size = 0.1;
+  int voxels_per_side = 16;
+  std::string input_pointcloud_topic_name = "/voxblox_node/local_height_pointcloud";
+  nh_private_.param("height_voxel_size", voxel_size, voxel_size);
+  nh_private_.param("height_voxels_per_side", voxels_per_side, voxels_per_side);
+  nh_private_.param("input_pointcloud_topic_name", input_pointcloud_topic_name, input_pointcloud_topic_name);
+
   height_layer_.reset(
-  new Layer<HeightVoxel>(0.1,
-                          tsdf_config.tsdf_voxels_per_side));
+  new Layer<HeightVoxel>(voxel_size,
+                         voxels_per_side));
   
   height_integrator_.reset(new HeightIntegrator(height_layer_.get()));
 
@@ -34,10 +41,10 @@ HeightServer::HeightServer(const ros::NodeHandle& nh,
                                                                                             1,
                                                                                             true);
   
-  height_sub_ = nh_private_.subscribe("/voxblox_node/local_height_pointcloud",
-                                       1,
-                                       &HeightServer::heightCallback,
-                                       this);
+  height_sub_ = nh_private_.subscribe(input_pointcloud_topic_name,
+                                      1,
+                                      &HeightServer::heightCallback,
+                                      this);
 }
 
 
