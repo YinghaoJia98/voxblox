@@ -10,10 +10,13 @@ HeightServer::HeightServer(const ros::NodeHandle& nh,
       world_frame_("map")
 {
 
-  TsdfMap::Config tsdf_config = getTsdfMapConfigFromRosParam(nh_private);
+  // TsdfMap::Config tsdf_config = getTsdfMapConfigFromRosParam(nh_private);
+  // height_layer_.reset(
+  //   new Layer<HeightVoxel>(tsdf_config.tsdf_voxel_size,
+  //                          tsdf_config.tsdf_voxels_per_side));
   height_layer_.reset(
-    new Layer<HeightVoxel>(tsdf_config.tsdf_voxel_size,
-                           tsdf_config.tsdf_voxels_per_side));
+  new Layer<HeightVoxel>(0.1,
+                          tsdf_config.tsdf_voxels_per_side));
   
   height_integrator_.reset(new HeightIntegrator(height_layer_.get()));
 

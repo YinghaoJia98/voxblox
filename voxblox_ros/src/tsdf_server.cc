@@ -443,7 +443,8 @@ void TsdfServer::publishLocalHeightPointCloud(const Transformation& T_G_C,
   {
     const Point point_G = T_G_C * point_C;
     // point_G lies within 8m square
-    if (abs(point_G[0] - origin[0]) <= 4 && abs(point_G[1] - origin[1]) <= 4 && abs(point_G[2]) < INFINITY)
+    // todo : and lower than certain degree or lower than robt pose + constant
+    if (abs(point_G[0] - origin[0]) <= 4 && abs(point_G[1] - origin[1]) <= 4 && abs(point_G[2]) < INFINITY && point_G[2] < origin[2] + 2)
     {
       pcl::PointXYZ height_point;
       height_point.x = point_G[0];
