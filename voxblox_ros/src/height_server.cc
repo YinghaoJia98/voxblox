@@ -7,13 +7,28 @@ HeightServer::HeightServer(const ros::NodeHandle& nh,
                            const ros::NodeHandle& nh_private)
     : nh_(nh),
       nh_private_(nh_private),
-      world_frame_("map")
+      world_frame_("map"),
+      publish_pointclouds_on_update_(false)
 {
 
-  TsdfMap::Config tsdf_config = getTsdfMapConfigFromRosParam(nh_private);
+  // TsdfMap::Config tsdf_config = getTsdfMapConfigFromRosParam(nh_private);
+  // height_layer_.reset(
+  //   new Layer<HeightVoxel>(tsdf_config.tsdf_voxel_size,
+  //                          tsdf_config.tsdf_voxels_per_side));
+  double voxel_size = 0.1;
+  int voxels_per_side = 16;
+  std::string input_pointcloud_topic_name = "/voxblox_node/local_height_pointcloud";
+  nh_private_.param("height_voxel_size", voxel_size, voxel_size);
+  nh_private_.param("height_voxels_per_side", voxels_per_side, voxels_per_side);
+  nh_private_.param("input_pointcloud_topic_name", input_pointcloud_topic_name, input_pointcloud_topic_name);
+
+  nh_private_.param("publish_pointclouds_on_update", publish_pointclouds_on_update_, publish_pointclouds_on_update_);
+
+
+
   height_layer_.reset(
-    new Layer<HeightVoxel>(tsdf_config.tsdf_voxel_size,
-                           tsdf_config.tsdf_voxels_per_side));
+  new Layer<HeightVoxel>(voxel_size,
+                         voxels_per_side));
   
   height_integrator_.reset(new HeightIntegrator(height_layer_.get()));
 
@@ -31,10 +46,21 @@ HeightServer::HeightServer(const ros::NodeHandle& nh,
                                                                                             1,
                                                                                             true);
   
-  height_sub_ = nh_private_.subscribe("/voxblox_node/local_height_pointcloud",
-                                       1,
-                                       &HeightServer::heightCallback,
-                                       this);
+  height_sub_ = nh_private_.subscribe(input_pointcloud_topic_name,
+                                      1,
+                                      &HeightServer::heightCallback,
+                                      this);
+
+  double publish_poinclouds_every_n_sec = 3;
+  nh_private_.param("publish_poinclouds_every_n_sec", publish_poinclouds_every_n_sec,
+                    publish_poinclouds_every_n_sec);
+
+  if (publish_poinclouds_every_n_sec > 0.0) {
+    publish_pointclouds_timer_ =
+        nh_private_.createTimer(ros::Duration(publish_poinclouds_every_n_sec),
+                                &HeightServer::publishPointcloudsEvent, this);
+  }
+
 }
 
 
@@ -75,6 +101,16 @@ void HeightServer::publishHeightPointcloudPlane() {
   height_pointcloud_plane_pub_.publish(pointcloud);
 }
 
+void HeightServer::publishPointclouds() {
+  std::cout << "======= Height Server : publish pointclouds =======" << std::endl;
+  publishHeightPointcloud();
+  publishHeightPointcloudPlane();
+}
+
+void HeightServer::publishPointcloudsEvent(const ros::TimerEvent& /*event*/) {
+  publishPointclouds();
+}
+
 void HeightServer::heightCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg) {
 
   // convert the msg to pcl and then to a voxblox pointcloud and traversability vector
@@ -91,8 +127,13 @@ void HeightServer::heightCallback(const sensor_msgs::PointCloud2::Ptr& pointclou
   integrateHeight(height_pointcloud);
 
   publishHeightLayer();
-  publishHeightPointcloud();
-  publishHeightPointcloudPlane();
+  if(publish_pointclouds_on_update_)
+  {
+    publishPointclouds();
+  }
+
 }
+
+
 
 }  // namespace voxblox

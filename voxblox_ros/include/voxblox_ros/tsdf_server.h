@@ -99,6 +99,7 @@ class TsdfServer {
 
   void updateMeshEvent(const ros::TimerEvent& event);
   void publishMapEvent(const ros::TimerEvent& event);
+  void publishPointcloudsEvent(const ros::TimerEvent& event);
 
   std::shared_ptr<TsdfMap> getTsdfMapPtr() { return tsdf_map_; }
 
@@ -168,6 +169,8 @@ class TsdfServer {
   // Timers.
   ros::Timer update_mesh_timer_;
   ros::Timer publish_map_timer_;
+
+  ros::Timer publish_pointclouds_timer_;
 
   bool verbose_;
 
