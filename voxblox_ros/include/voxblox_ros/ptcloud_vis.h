@@ -35,6 +35,10 @@ template <typename VoxelType>
 using ShouldVisualizeVoxelColorFunctionType = std::function<bool(
     const VoxelType& voxel, const Point& coord, Color* color)>;
 
+template <typename VoxelType>
+using ShouldVisualizeVoxelColorFunctionType2 = std::function<bool(
+    const VoxelType& voxel, const Point& coord)>;
+
 /**
  * For intensities values, such as distances, which are mapped to a color only
  * by the subscriber.
@@ -103,7 +107,7 @@ std::vector<T> arange(T start, T stop, T step = 1) {
 template <typename VoxelType>
 void createColorPointcloudFromLayerBounds(
     const Layer<VoxelType>& layer,
-    const ShouldVisualizeVoxelColorFunctionType<VoxelType>& vis_function,
+    const ShouldVisualizeVoxelColorFunctionType2<VoxelType>& vis_function,
     pcl::PointCloud<pcl::PointXYZRGB>* pointcloud, Transformation* trafo) {
   CHECK_NOTNULL(pointcloud);
   pointcloud->clear();
@@ -112,36 +116,29 @@ void createColorPointcloudFromLayerBounds(
   size_t vps = layer.voxels_per_side();
   size_t num_voxels_per_block = vps * vps * vps;
   
-  Color color;
   // Iterate over blocks close to center position.
   // tsdf_voxel_size: 0.1; tsdf_voxels_per_side: 16 -> block = 1.6m (bound -3;+3) -> 5 (6 for rounding)
-  
   auto position = trafo->getPosition();
   for (auto x_ : arange<float>( position(0,0)-4, position(0,0)+4, 1.6 )){
     for (auto y_ : arange<float>( position(1,0)-4, position(1,0)+4, 1.6 )){
       for (auto z_ : arange<float>( position(2,0)-2, position(2,0)+2.8, 1.6 )){
-        // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         Point point_block(x_,y_,z_);
         
         auto block_index = layer.computeBlockIndexFromCoordinates(point_block);
         if (layer.hasBlock(block_index)){
           auto block = layer.getBlockPtrByIndex(block_index);
-
           for (size_t linear_index = 0; linear_index < num_voxels_per_block;
               ++linear_index) {
             Point coord = block->computeCoordinatesFromLinearIndex(linear_index);
-            if (vis_function(block->getVoxelByLinearIndex(linear_index), coord,
-                            &color)) {
+            if (vis_function(block->getVoxelByLinearIndex(linear_index), coord)) {
               pcl::PointXYZRGB point;
               point.x = coord.x();
               point.y = coord.y();
               point.z = coord.z();
               pointcloud->push_back(point);
             }
-          }
+          }          
         }
-        // std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-        //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
       }
     }
   }
@@ -253,7 +250,6 @@ inline bool visualizeNearSurfaceTsdfVoxels(const TsdfVoxel& voxel,
 inline bool visualizeNearLocalSurfaceTsdfVoxels(const TsdfVoxel& voxel,
                                                 const Point& coord,
                                                 double surface_distance,
-                                                Color* color,
                                                 Transformation* trafo) {
   constexpr float kMinWeight = 0;
   return (voxel.weight > kMinWeight &&
@@ -429,7 +425,7 @@ inline void createLocalSurfacePointcloudFromTsdfLayer(
   createColorPointcloudFromLayerBounds<TsdfVoxel>(
       layer,
       std::bind(&visualizeNearLocalSurfaceTsdfVoxels, ph::_1, ph::_2,
-                surface_distance, ph::_3, &trafo),
+                surface_distance, &trafo),
       pointcloud, &trafo);
 }
 inline void createUncoloredSurfacePointcloudFromTsdfLayer(
