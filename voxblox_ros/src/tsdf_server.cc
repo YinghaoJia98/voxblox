@@ -158,15 +158,15 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
                                 &TsdfServer::publishMapEvent, this);
   }
 
-  // double publish_poinclouds_every_n_sec = -1;
-  // nh_private_.param("publish_poinclouds_every_n_sec", publish_poinclouds_every_n_sec,
-  //                   publish_poinclouds_every_n_sec);
+  double publish_poinclouds_every_n_sec = 0.5;
+  nh_private_.param("publish_poinclouds_every_n_sec", publish_poinclouds_every_n_sec,
+                    publish_poinclouds_every_n_sec);
 
-  // if (publish_poinclouds_every_n_sec > 0.0) {
-  //   publish_pointclouds_timer_ =
-  //       nh_private_.createTimer(ros::Duration(publish_poinclouds_every_n_sec),
-  //                               &TsdfServer::publishPointcloudsEvent, this);
-  // }
+  if (publish_poinclouds_every_n_sec > 0.0) {
+    publish_pointclouds_timer_ =
+        nh_private_.createTimer(ros::Duration(publish_poinclouds_every_n_sec),
+                                &TsdfServer::publishPointcloudsEvent, this);
+  }
 }
 
 void TsdfServer::getServerConfigFromRosParam(
@@ -572,7 +572,7 @@ void TsdfServer::publishPointclouds() {
   // std::cout << "publishAllUpdatedTsdfVoxels" << std::endl;
   // publishAllUpdatedTsdfVoxels();
   // std::cout << "publishTsdfSurfacePoints" << std::endl;
-  // publishTsdfSurfacePoints();
+  publishTsdfSurfacePoints();
   publishTsdfLocalSurfacePoints();
   // std::cout << "publishTsdfOccupiedNodes" << std::endl;
   // publishTsdfOccupiedNodes();
