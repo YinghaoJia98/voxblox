@@ -498,6 +498,7 @@ void TsdfServer::publishTsdfSurfacePoints() {
 void TsdfServer::publishTsdfLocalSurfacePoints() {
   // Create a pointcloud with distance = intensity.
   pcl::PointCloud<pcl::PointXYZRGB> pointcloud;
+  pointcloud.reserve(256000);
   const float surface_distance_thresh = tsdf_map_->getTsdfLayer().voxel_size() *
                                         surface_min_distance_voxel_size_factor_;
   ros::WallTime start = ros::WallTime::now();
