@@ -503,18 +503,14 @@ void TsdfServer::publishTsdfLocalSurfacePoints() {
                                         surface_min_distance_voxel_size_factor_;
   ros::WallTime start = ros::WallTime::now();
 
-  Transformation T_G_C;
-  if (transformer_.lookupTransform("base",
-                                   world_frame_,
-                                   ros::Time(0), &T_G_C)){
-    createLocalSurfacePointcloudFromTsdfLayer(tsdf_map_->getTsdfLayer(),
-                                                surface_distance_thresh,
-                                                &pointcloud, T_G_C);
-    ros::WallTime end = ros::WallTime::now();
-    std::cout << "create LocalSurface point in " << (end - start).toSec() << " s" << std::endl;
-    pointcloud.header.frame_id = world_frame_;
-    local_surface_pointcloud_pub_.publish(pointcloud);
-  }
+  
+  createLocalSurfacePointcloudFromTsdfLayer(tsdf_map_->getTsdfLayer(),
+                                            surface_distance_thresh,
+                                            &pointcloud, last_T_G_C_);
+  ros::WallTime end = ros::WallTime::now();
+  std::cout << "create LocalSurface point in " << (end - start).toSec() << " s" << std::endl;
+  pointcloud.header.frame_id = world_frame_;
+  local_surface_pointcloud_pub_.publish(pointcloud);
 }
 
 void TsdfServer::publishTsdfOccupiedNodes() {

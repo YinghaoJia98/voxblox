@@ -9,7 +9,7 @@ voxblox_tsdf_node:
     icp_refine_roll_pitch: False
     integration_order_mode: "sorted"
     max_consecutive_ray_collisions: 2
-    max_ray_length_m: 8
+    max_ray_length_m: 10
     max_weight: 50
     mesh_min_weight: 1e-4
     method: "fast"
@@ -29,7 +29,7 @@ voxblox_tsdf_node:
     tsdf_voxel_size: 0.1
     tsdf_voxels_per_side: 16
     update_map_every_n_sec: 20.0
-    update_mesh_every_n_sec: 200.0
+    update_mesh_every_n_sec: 20.0
     use_const_weight: False
     use_freespace_pointcloud: False
     use_tf_transforms: True
@@ -39,9 +39,9 @@ voxblox_tsdf_node:
     weight_ray_by_range: False
     world_frame: map
     min_ray_length: 0.1
-    publish_pointclouds_on_update: False
+    publish_pointclouds_on_update: True
     height_cutoff: 2.0
-    publish_poinclouds_every_n_sec: 0.5
+    publish_poinclouds_every_n_sec: 0.01
 
 voxblox_height_node:
     height_voxel_size: 0.1

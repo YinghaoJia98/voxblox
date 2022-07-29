@@ -119,9 +119,9 @@ void createColorPointcloudFromLayerBounds(
   // Iterate over blocks close to center position.
   // tsdf_voxel_size: 0.1; tsdf_voxels_per_side: 16 -> block = 1.6m (bound -3;+3) -> 5 (6 for rounding)
   auto position = trafo->getPosition();
-  for (auto x_ : arange<float>( position(0,0)-4, position(0,0)+4, 1.6 )){
-    for (auto y_ : arange<float>( position(1,0)-4, position(1,0)+4, 1.6 )){
-      for (auto z_ : arange<float>( position(2,0)-2, position(2,0)+2.8, 1.6 )){
+  for (auto x_ : arange<float>( position(0,0)-8, position(0,0)+8, 1.6 )){
+    for (auto y_ : arange<float>( position(1,0)-8, position(1,0)+8, 1.6 )){
+      for (auto z_ : arange<float>( position(2,0)-4, position(2,0)+4, 1.6 )){
         Point point_block(x_,y_,z_);
         
         auto block_index = layer.computeBlockIndexFromCoordinates(point_block);
@@ -254,8 +254,8 @@ inline bool visualizeNearLocalSurfaceTsdfVoxels(const TsdfVoxel& voxel,
   constexpr float kMinWeight = 0;
   return (voxel.weight > kMinWeight &&
       std::abs(voxel.distance) < surface_distance && 
-      std::abs(trafo->getPosition()[0] - coord.x()) < 4.0 &&
-      std::abs(trafo->getPosition()[1] - coord.y()) < 4.0);
+      std::abs(trafo->getPosition()[0] - coord.x()) < 6.0 &&
+      std::abs(trafo->getPosition()[1] - coord.y()) < 6.0);
 }
 
 inline bool visualizeTsdfVoxels(const TsdfVoxel& voxel, const Point& /*coord*/,
