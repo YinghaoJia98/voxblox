@@ -69,7 +69,6 @@ void HeightServer::integrateHeight(const Pointcloud& pointcloud) {
 }
 
 void HeightServer::publishHeightLayer() {
-  std::cout << "publish height layer with voxel size " << height_layer_.get()->voxel_size() << std::endl;
   
   voxblox_msgs::Layer layer_msg;
 
@@ -102,7 +101,6 @@ void HeightServer::publishHeightPointcloudPlane() {
 }
 
 void HeightServer::publishPointclouds() {
-  std::cout << "======= Height Server : publish pointclouds =======" << std::endl;
   publishHeightPointcloud();
   publishHeightPointcloudPlane();
 }

@@ -227,7 +227,6 @@ void createOccupancyBlocksFromLayer(
       }
     }
   }
-  std::cout << " iterated through " << ii << " voxels" << std::endl;
   marker_array->markers.push_back(block_marker);
 }
 
@@ -648,7 +647,6 @@ inline void createOccupancyBlocksFromTsdfLayer(
     const Layer<TsdfVoxel>& layer, const std::string& frame_id,
     const FloatingPoint occupied_voxel_min_distance,
     visualization_msgs::MarkerArray* marker_array) {
-  std::cout << " begin createOccupancyBlocksFromTsdfLayer" << std::endl;
   auto start__ = std::chrono::system_clock::now();
   CHECK_NOTNULL(marker_array);
   createOccupancyBlocksFromLayer<TsdfVoxel>(
@@ -658,7 +656,6 @@ inline void createOccupancyBlocksFromTsdfLayer(
       frame_id, marker_array);
   auto end__ = std::chrono::system_clock::now();
   auto duration__ = std::chrono::duration<double>(end__ - start__).count();
-  std::cout << " end createOccupancyBlocksFromTsdfLayer, uses : " << duration__ << " s" << std::endl; 
 }
 
 inline void createOccupancyBlocksFromOccupancyLayer(

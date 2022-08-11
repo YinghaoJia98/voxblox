@@ -4,7 +4,7 @@
     <rosparam command="load" file="$(find voxblox_ros)/cfg/anymal.yaml" />
 
     <node name="voxblox_tsdf_node" pkg="voxblox_ros" type="tsdf_server" output="screen" args="-alsologtostderr" clear_params="true" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' ">
-        <remap from="pointcloud" to="/lidar_bpearl_front_bpearl_back/point_cloud" />
+        <remap from="pointcloud" to="/point_cloud_filter/lidar/point_cloud_filtered" />
     </node>
 
     <node name="voxblox_height_node" pkg="voxblox_ros" type="height_server" output="screen" args="-alsologtostderr" clear_params="true" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' ">

@@ -404,7 +404,6 @@ void TsdfServer::insertPointcloud(
   }
 
   if (publish_pointclouds_on_update_) {
-    std::cout << "publish on update" << std::endl;
     publishPointclouds();
   }
 
@@ -508,7 +507,6 @@ void TsdfServer::publishTsdfLocalSurfacePoints() {
                                             surface_distance_thresh,
                                             &pointcloud, last_T_G_C_);
   ros::WallTime end = ros::WallTime::now();
-  std::cout << "create LocalSurface point in " << (end - start).toSec() << " s" << std::endl;
   pointcloud.header.frame_id = world_frame_;
   local_surface_pointcloud_pub_.publish(pointcloud);
 }
@@ -535,7 +533,6 @@ void TsdfServer::publishSlices() {
 }
 
 void TsdfServer::publishMap(bool reset_remote_map) {
-  std::cout << "============== start publish tsdf map" << std::endl;
   if (!publish_tsdf_map_) {
     return;
   }
@@ -559,7 +556,6 @@ void TsdfServer::publishMap(bool reset_remote_map) {
     publish_map_timer.Stop();
   }
   num_subscribers_tsdf_map_ = subscribers;
-  std::cout << "============== end publish tsdf map with " << subscribers << " subscribers" << std::endl;
 
 }
 

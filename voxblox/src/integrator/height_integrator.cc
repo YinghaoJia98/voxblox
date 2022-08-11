@@ -7,7 +7,6 @@ HeightIntegrator::HeightIntegrator(Layer<HeightVoxel>* height_layer)
 
 
 void HeightIntegrator::integrateHeight(const Pointcloud &pointcloud) {
-  std::cout << "HeightIntegrator::start integrateHeight with " << pointcloud.size() << " points" << std::endl;
   auto start__ = std::chrono::system_clock::now();
   for (unsigned int i = 0; i < pointcloud.size(); ++i) {
     auto cur_point = pointcloud[i];
@@ -38,7 +37,6 @@ void HeightIntegrator::integrateHeight(const Pointcloud &pointcloud) {
   auto end__ = std::chrono::system_clock::now();
   auto duration__ = std::chrono::duration<double>(end__ - start__).count();
 
-  std::cout << "HeightIntegrator::end integrate height poincloud in " << duration__ << " s" << std::endl;
    
 }
 

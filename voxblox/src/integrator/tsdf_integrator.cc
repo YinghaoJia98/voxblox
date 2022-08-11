@@ -619,7 +619,6 @@ void FastTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
                                              const Pointcloud& points_C,
                                              const Colors& colors,
                                              const bool freespace_points) {
-  std::cout << "********** start integrate tsdf poincloud" << std::endl;
   auto start__ = std::chrono::system_clock::now();
   timing::Timer integrate_timer("integrate/fast");
   CHECK_EQ(points_C.size(), colors.size());
@@ -648,8 +647,6 @@ void FastTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
   }
   auto end__ = std::chrono::system_clock::now();
   auto duration__ = std::chrono::duration<double>(end__ - start__).count();
-
-  std::cout << "********** end integrate tsdf poincloud in " << duration__ << " s" << std::endl;
 
   integrate_timer.Stop();
 
