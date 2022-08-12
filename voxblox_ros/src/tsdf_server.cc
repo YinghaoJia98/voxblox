@@ -500,13 +500,10 @@ void TsdfServer::publishTsdfLocalSurfacePoints() {
   pointcloud.reserve(256000);
   const float surface_distance_thresh = tsdf_map_->getTsdfLayer().voxel_size() *
                                         surface_min_distance_voxel_size_factor_;
-  ros::WallTime start = ros::WallTime::now();
-
   
   createLocalSurfacePointcloudFromTsdfLayer(tsdf_map_->getTsdfLayer(),
                                             surface_distance_thresh,
                                             &pointcloud, last_T_G_C_);
-  ros::WallTime end = ros::WallTime::now();
   pointcloud.header.frame_id = world_frame_;
   local_surface_pointcloud_pub_.publish(pointcloud);
 }
