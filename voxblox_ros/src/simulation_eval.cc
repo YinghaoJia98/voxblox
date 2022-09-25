@@ -36,7 +36,7 @@ class SimulationServerImpl : public voxblox::SimulationServer {
 int main(int argc, char** argv) {
   ros::init(argc, argv, "voxblox_sim");
   google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, false);
+  gflags::ParseCommandLineFlags(&argc, &argv, false);
   google::InstallFailureSignalHandler();
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");

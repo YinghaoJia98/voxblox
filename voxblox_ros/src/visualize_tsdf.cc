@@ -181,7 +181,7 @@ void SimpleTsdfVisualizer::run(const Layer<TsdfVoxel>& tsdf_layer) {
 int main(int argc, char** argv) {
   ros::init(argc, argv, "visualize_tsdf_node");
   google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, false);
+  gflags::ParseCommandLineFlags(&argc, &argv, false);
   google::InstallFailureSignalHandler();
 
   ros::NodeHandle nh_private("~");
