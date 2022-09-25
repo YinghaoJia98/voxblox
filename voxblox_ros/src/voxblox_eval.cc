@@ -27,7 +27,7 @@
 
 #include "voxblox_ros/mesh_vis.h"
 #include "voxblox_ros/ptcloud_vis.h"
-
+#include <gflags/gflags.h>
 // This binary evaluates a pre-built voxblox map against a provided ground
 // truth dataset, provided as pointcloud, and outputs a variety of statistics.
 namespace voxblox {

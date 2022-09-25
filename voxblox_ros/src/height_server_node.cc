@@ -1,5 +1,5 @@
 #include "voxblox_ros/height_server.h"
-
+#include <gflags/gflags.h>
 int main(int argc, char** argv) {
   ros::init(argc, argv, "voxblox_height");
   google::InitGoogleLogging(argv[0]);
