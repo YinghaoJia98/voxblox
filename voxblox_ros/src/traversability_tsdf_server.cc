@@ -59,6 +59,7 @@ void TraversabilityTsdfServer::publishPointclouds() {
 
 void TraversabilityTsdfServer::traversabilityCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg) {
 
+  std::cout << "-----------traversabilityCallback-------------" << std::endl;
   // convert the msg to pcl and then to a voxblox pointcloud and traversability vector
   Pointcloud traversability_pointcloud;
   Traversabilities traversabilities;
