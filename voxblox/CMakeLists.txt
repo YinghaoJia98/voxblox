@@ -12,6 +12,9 @@ add_definitions(-std=c++14 -Wall -Wextra)
 ############
 # General idea: first check if we have protobuf catkin, then use that.
 # Otherwise use system protobuf.
+set(PROTOBUF_ROOT "/home/december/third_party_libraries/protobuf")
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PROTOBUF_ROOT})
+
 set(PROTO_DEFNS proto/voxblox/Block.proto
                 proto/voxblox/Layer.proto)
 set(PROTO_LIBRARIES "")
@@ -26,6 +29,9 @@ else()
   PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_DEFNS})
   set(PROTO_LIBRARIES ${PROTOBUF_LIBRARIES})
 endif()
+
+include_directories(${PROTOBUF_INCLUDE_DIR})
+message(STATUS "{PROTOBUF_INCLUDE_DIR} is ${PROTOBUF_INCLUDE_DIR}")
 
 ####################
 # SET SOURCE FILES #
@@ -78,7 +84,8 @@ set_target_properties(${PROJECT_NAME}_proto PROPERTIES PUBLIC_HEADER "${PROTO_HD
 # We need the binary folder in the include directories so we can find the proto
 # headers within this library and all dependent packages.
 target_include_directories(${PROJECT_NAME}_proto
-                           PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+                           PUBLIC ${CMAKE_CURRENT_BINARY_DIR}
+                           PUBLIC ${PROTOBUF_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME}_proto ${PROTO_LIBRARIES})
 
 cs_add_library(${PROJECT_NAME}

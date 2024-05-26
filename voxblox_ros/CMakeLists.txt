@@ -10,6 +10,14 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_definitions(-std=c++14 -Wall -Wextra)
 
+############
+# PROTOBUF #
+############
+set(PROTOBUF_ROOT "/home/december/third_party_libraries/protobuf")
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PROTOBUF_ROOT})
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIR})
+link_directories(${PROTOBUF_ROOT}/lib)
 #############
 # LIBRARIES #
 #############
